@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 
 const MySwal = withReactContent(Swal);
+const API_URL = import.meta.env.API_URL;
 
 const LeaveRequestDetailModal = ({ request, onClose, onUpdateStatus }) => {
   const [modalImage, setModalImage] = useState(null);
@@ -67,10 +68,10 @@ const LeaveRequestDetailModal = ({ request, onClose, onUpdateStatus }) => {
                 images.map((img, idx) => (
                   <img
                     key={idx}
-                    src={`https://app.magnitudetms.com${img}`}
+                    src={`${API_URL}${img}`}
                     alt={`attachment-${idx}`}
                     className="w-28 h-28 object-cover rounded-lg cursor-pointer border hover:opacity-80 transition-opacity"
-                    onClick={() => setModalImage(`https://app.magnitudetms.com${img}`)}
+                    onClick={() => setModalImage(`${API_URL}${img}`)}
                   />
                 ))
               ) : (

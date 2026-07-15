@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const API_URL = import.meta.env.API_URL;
+
 const MultiUpload = () => {
   const [files, setFiles] = useState([]);
   const [preview, setPreview] = useState([]);
@@ -33,7 +35,7 @@ const MultiUpload = () => {
       uploadData.append("userId", "123");
 
       const res = await axios.post(
-        "https://app.magnitudetms.com/api/upload?Up_type=driver",
+        `${API_URL}/api/upload?Up_type=driver`,
         uploadData,
         {
           headers: {

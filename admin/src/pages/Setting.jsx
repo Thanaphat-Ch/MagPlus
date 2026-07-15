@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
 
+const API_URL = import.meta.env.API_URL;
+
 const Setting = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -34,7 +36,7 @@ const Setting = () => {
         return;
       }
       try {
-        const res = await axios.get("https://app.magnitudetms.com/api/user/profile", {
+        const res = await axios.get(`${API_URL}/api/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(res.data);
@@ -64,7 +66,7 @@ const Setting = () => {
       setErrorUsers('');
       const token = localStorage.getItem('token');
       try {
-        const res = await axios.get('https://app.magnitudetms.com/api/readall', { headers: { Authorization: `Bearer ${token}` } });
+        const res = await axios.get(`${API_URL}/api/readall`, { headers: { Authorization: `Bearer ${token}` } });
         setUserList(res.data);
       } catch (err) {
         setErrorUsers('ไม่สามารถดึงข้อมูลผู้ใช้ได้');
@@ -79,7 +81,7 @@ const Setting = () => {
   const handleRoleChange = async (userId, newRole) => {
     const token = localStorage.getItem('token');
     try {
-      await axios.put(`https://app.magnitudetms.com000/api/users/${userId}/role`, { role: newRole }, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.put(`${API_URL}/api/users/${userId}/role`, { role: newRole }, { headers: { Authorization: `Bearer ${token}` } });
       setUserList(userList.map(u => (u.id === userId ? { ...u, role: newRole } : u)));
       Swal.fire('สำเร็จ!', 'เปลี่ยนสิทธิ์ผู้ใช้เรียบร้อยแล้ว', 'success');
     } catch (err) {
@@ -103,7 +105,7 @@ const Setting = () => {
     }
     const token = localStorage.getItem('token');
     try {
-      const res = await axios.post('https://app.magnitudetms.com/api/users/create', newUser, {
+      const res = await axios.post(`${API_URL}/api/users/create`, newUser, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUserList([...userList, res.data.newUser]); 

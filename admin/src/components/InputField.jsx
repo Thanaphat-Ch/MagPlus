@@ -2,18 +2,17 @@ import { useState } from "react"
 import axios from "axios"
 import { FiUploadCloud, FiFileText, FiX } from "react-icons/fi";
 
+const API_URL = import.meta.env.API_URL;
+
 const ImagePreviewModal = ({ src, field, onClose }) => {
-  // if (!src.startsWith("https://app.magnitudetms.com/uploads/")) {
-  //   if (src.startsWith("/")) src = src.substring(1);
-  //   src = "https://app.magnitudetms.com/uploads/" + src;
-  // }
+
   const dowloads_img = async (imgPath) => {
     try {
       // ตัด prefix url ออก เหลือเฉพาะ relative path เช่น "driver/3/D_3-xxxx.png"
-      const relativePath = imgPath.replace("https://app.magnitudetms.com/uploads/", "")
+      const relativePath = imgPath.replace(`${API_URL}/uploads/`, "")
 
       const response = await axios.post(
-        "https://app.magnitudetms.com/download-pdf",
+        `${API_URL}/download-pdf`,
         { images: [relativePath] }, // ส่งเป็น array
         { responseType: "blob" }
       )
@@ -209,7 +208,7 @@ export function FileUploadPreviewPDF({
       : value?.startsWith("http")
       ? value
       : value
-      ? `https://app.magnitudetms.com/uploads/${value}`
+      ? `${API_URL}/uploads/${value}`
       : null
 
   return (

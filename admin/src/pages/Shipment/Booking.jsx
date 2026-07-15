@@ -51,11 +51,12 @@ const Orderbooking = () => {
   const [selectedBooking, setSelectedBooking] = useState(null) // สำหรับ modal
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  const API_URL = import.meta.env.API_URL
 
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await axios.get("https://app.magnitudetms.com/api/bookings")
+      const response = await axios.get(`${API_URL}/api/bookings`)
       const rawData = Array.isArray(response.data) ? response.data : []
       rawData.sort((a, b) => new Date(b.date) - new Date(a.date))
       setBookings(rawData)

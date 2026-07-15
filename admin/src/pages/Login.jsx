@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 
+const API_URL = import.meta.env.API_URL;
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -20,7 +21,7 @@ const Login = () => {
 
     try {
 
-  const response = await fetch('https://app.magnitudetms.com/api/login', { 
+  const response = await fetch(`${API_URL}/api/login`, { 
     method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,7 +51,7 @@ const Login = () => {
   //     const decoded = jwt_decode(credentialResponse.credential);
   //     // console.log("Google User:", decoded);
 
-  //     const res = await fetch("https://app.magnitudetms.com/api/google-login", {
+  //     const res = await fetch(`${API_URL}/api/google-login`, {
   //       method: "POST",
   //       headers: {
   //         "Content-Type": "application/json",

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FiClock, FiMenu } from "react-icons/fi";
 
+const API_URL = import.meta.env.API_URL;
+
 const InitialsCircle = ({ name, surname }) => {
     const initials = `${name?.charAt(0) || ''}${surname?.charAt(0) || ''}`.toUpperCase();
     
@@ -35,7 +37,7 @@ function TimeRecord() {
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const res = await axios.get("https://app.magnitudetms.com/api/attendance");
+        const res = await axios.get(`${API_URL}/api/attendance`);
         setRecords(res.data);
       } catch (error) {
         console.error("Error fetching attendance:", error);

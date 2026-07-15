@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 
-const API_URL = "https://app.magnitudetms.com";
+const API_URL = import.meta.env.API_URL;
 
 export default function ChatWindow({ adminId, socket }) {
   const [messages, setMessages] = useState([]);

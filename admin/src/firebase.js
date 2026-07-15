@@ -5,7 +5,7 @@ import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import axios from 'axios';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyALQGwnIhm3P0EUb7aUSC_jjizJmEzeyRo",
+  apiKey: import.meta.env.FIREBASE_API_KEY,
   authDomain: "chatadmin-a2f3c.firebaseapp.com",
   projectId: "chatadmin-a2f3c",
   storageBucket: "chatadmin-a2f3c.firebasestorage.app",
@@ -18,7 +18,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
-const API_URL = import.meta.env.VITE_API_URL || "https://app.magnitudetms.com";
+const API_URL = import.meta.env.API_URL;
 
 export const requestForToken = (userId) => {
   return getToken(messaging, { vapidKey: 'BMKY39tQUtPUwBtR-GBQqPNhpjAT2pIyNnGv2ahooiGwbVZeVFFXIKvBPJb0zyE59EfvKgSu2n6khZEx5ERJMDM' })

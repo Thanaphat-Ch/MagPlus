@@ -2,7 +2,7 @@
 // import LeaveRequestCard from "../components/LeaveRequestCard";
 // import LeaveRequestDetailModal from "../components/LeaveRequestDetailModal";
 
-// const API_URL = "https://app.magnitudetms.com";
+// const API_URL = import.meta.env.API_URL;
 
 // const FILTER_TEXTS = {
 //   all: "ทั้งหมด",
@@ -136,7 +136,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import LeaveRequestCard from "../components/LeaveRequestCard";
 import LeaveRequestDetailModal from "../components/LeaveRequestDetailModal";
 
-const API_URL = "https://app.magnitudetms.com";
+const API_URL = import.meta.env.API_URL;
 
 const FILTER_TEXTS = {
   all: "ทั้งหมด",

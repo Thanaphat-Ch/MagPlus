@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const api = axios.create({
-  baseURL: "https://app.magnitudetms.com/api",
+  baseURL: `${import.meta.env.API_URL}/api`,
   timeout: 10000, // 10 วินาที
 })
 

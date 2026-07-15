@@ -78,10 +78,6 @@ export default function Truck() {
       if (!window.confirm("คุณต้องการลบข้อมูลนี้หรือไม่?")) return;
       setLoading(true);
         try {
-          // const token = localStorage.getItem("token");
-          // await axios.delete(`https://app.magnitudetms.com/api/truck/delete?id=${id}`, {
-          //   headers: { Authorization: `Bearer ${token}` },
-          // });
           await api.delete(`/truck/delete?id=${id}`)
           fetchTrucks(searchTerm);
         } catch (error) {

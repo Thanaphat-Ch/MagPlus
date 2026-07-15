@@ -122,13 +122,14 @@ export default function Shipment() {
   const [endDate, setEndDate] = useState(getTodayISO())
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  const API_URL = import.meta.env.API_URL
 
   useEffect(() => {
     const fetchShipments = async () => {
       setLoading(true)
       setError("")
       try {
-        const res = await axios.get("https://app.magnitudetms.com/api/shipment")
+        const res = await axios.get(`${API_URL}/api/shipment`)
         const formattedData = res.data.map((item) => ({
           ...item,
           Status: statusMap[item.OrStDesc] || "Pending",

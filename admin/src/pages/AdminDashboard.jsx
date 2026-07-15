@@ -5,6 +5,7 @@ import { Pie, Line } from "react-chartjs-2"
 import { Chart, ArcElement, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale, Filler } from "chart.js"
 
 Chart.register(ArcElement, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale, Filler)
+const API_URL = import.meta.env.API_URL
 
 const lineOptions = {
   responsive: true,
@@ -38,9 +39,9 @@ const AdminDashboard = () => {
   const [availableTruckList, setAvailableTruckList] = useState([])
 
   useEffect(() => {
-    const socket = io("https://app.magnitudetms.com")
+    const socket = io(`${API_URL}`)
     axios
-      .get("https://app.magnitudetms.com/api/active-users")
+      .get(`${API_URL}/api/active-users`)
       .then((res) => setActiveUsers(res.data.activeUsers || 0))
       .catch((err) => console.error("Error loading active users:", err))
     socket.on("activeUsers", (count) => setActiveUsers(count))
@@ -57,14 +58,14 @@ const AdminDashboard = () => {
         if (!token) throw new Error("Authentication token not found")
 
         const [usersRes, activeRes, jobsSummaryRes, trucksRes, availableRes, maintenanceRes, accidentRes, parkRes] = await Promise.all([
-          axios.get("https://app.magnitudetms.com/api/readall", { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get("https://app.magnitudetms.com/api/active-users", { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get("https://app.magnitudetms.com/api/jobs/summary"),
-          axios.get("https://app.magnitudetms.com/api/total-trucks"),
-          axios.get("https://app.magnitudetms.com/api/available-trucks"),
-          axios.get("https://app.magnitudetms.com/api/trucks/maintenance"),
-          axios.get("https://app.magnitudetms.com/api/trucks/accident"),
-          axios.get("https://app.magnitudetms.com/api/trucks/park"),
+          axios.get(`${API_URL}/api/readall`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_URL}/api/active-users`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_URL}/api/jobs/summary`),
+          axios.get(`${API_URL}/api/total-trucks`),
+          axios.get(`${API_URL}/api/available-trucks`),
+          axios.get(`${API_URL}/api/trucks/maintenance`),
+          axios.get(`${API_URL}/api/trucks/accident`),
+          axios.get(`${API_URL}/api/trucks/park`),
         ])
 
         setUsers(usersRes.data || [])
