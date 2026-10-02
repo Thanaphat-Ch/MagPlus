@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, Dimensions, Image, Modal, Platform, SafeAreaV
 import SignatureScreen from "react-native-signature-canvas";
 import SignatureCanvas from "react-signature-canvas";
 import NavFooter from "../components/NavFooter";
+import { API_URL } from "@/lib/config";
 
 const screenWidth = Dimensions.get("window").width;
 const thumbnailSize = (screenWidth - 32 - 16) / 3;
@@ -201,8 +202,7 @@ export default function Loading() {
     }
 
     try {
-      const apiUrl = process.env.API_URL || 'http://localhost:3000';
-      const response = await fetch(apiUrl, {
+      const response = await fetch(API_URL, {
         method: 'POST',
         body: formData,
        });

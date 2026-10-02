@@ -139,10 +139,10 @@ import LeaveRequestDetailModal from "../components/LeaveRequestDetailModal";
 const API_URL = import.meta.env.API_URL;
 
 const FILTER_TEXTS = {
-  all: "ทั้งหมด",
-  pending: "รออนุมัติ",
-  approved: "อนุมัติแล้ว",
-  rejected: "ปฏิเสธ",
+ all: "ทั้งหมด",
+ pending: "รออนุมัติ",
+ approved: "อนุมัติแล้ว",
+ rejected: "ปฏิเสธ",
 };
 
 const ICONS = {

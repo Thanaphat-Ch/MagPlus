@@ -149,7 +149,7 @@ export default function HistoryScreen() {
             return;
         }
         setDriverId(currentDriverId); 
-        fetchCarLocation(); 
+        // fetchCarLocation(); 
 
         const statusParam = STATUS_MAP[activeTab];
         const url = `http://localhost:5000/api/jobs/driver/${currentDriverId}?status=${statusParam}`;

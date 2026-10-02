@@ -1,3 +1,4 @@
+import { API_URL } from "@/lib/config";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
@@ -14,7 +15,6 @@ type Notification = {
 };
 
 export default function notifications() {
-  const apiUrl = process.env.API_URL;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function notifications() {
   }, []);
 
   useEffect(() => {
-  const socket = io(`${apiUrl}`);
+  const socket = io(`${API_URL}`);
 
   socket.on("newNotification", async (data: Notification) => {
       setNotifications((prev) => {

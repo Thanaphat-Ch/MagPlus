@@ -9,6 +9,7 @@ import { Alert, FlatList, Image, Platform, ScrollView, Text, TextInput, Touchabl
 import DropDownPicker, { ItemType } from 'react-native-dropdown-picker';
 import { ImagePreviewModal } from '../../components/ImagePreviewModal';
 import NavFooter from '../../components/NavFooter';
+import { API_URL } from '@/lib/config';
 
 interface CrossPlatformDatePickerProps {
     label: string;
@@ -101,7 +102,6 @@ export default function AttendanceLeave() {
     const [leaveImages, setLeaveImages] = useState<string[]>([]);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [pendingCount, setPendingCount] = useState<string | null>('-');
-    const apiUrl = process.env.API_URL;
 
     useEffect(() => {
         const loadUserId = async () => {
@@ -122,7 +122,7 @@ export default function AttendanceLeave() {
     try {
         const token = await AsyncStorage.getItem("token");
         const response = await axios.get(
-        `${apiUrl}/api/sum-leave-requests`,
+        `${API_URL}/api/sum-leave-requests`,
         {
             headers: { Authorization: `Bearer ${token}` },
         }
@@ -141,7 +141,7 @@ export default function AttendanceLeave() {
     setCheckInTime(now);
 
     try {
-        const { data } = await axios.post(`${apiUrl}/api/attendance/checkin`, {
+        const { data } = await axios.post(`${API_URL}/api/attendance/checkin`, {
             user_id: userId,
         });
 
@@ -158,7 +158,7 @@ export default function AttendanceLeave() {
     setCheckOutTime(now);
 
     try {
-        const { data } = await axios.post(`${apiUrl}/api/attendance/checkout`, {
+        const { data } = await axios.post(`${API_URL}/api/attendance/checkout`, {
             user_id: userId,
         });
 
@@ -194,7 +194,7 @@ export default function AttendanceLeave() {
             }
         }
 
-        const { data } = await axios.post(`${apiUrl}/api/leave`, formData, {
+        const { data } = await axios.post(`${API_URL}/api/leave`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
 

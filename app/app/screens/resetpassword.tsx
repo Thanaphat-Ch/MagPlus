@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import AlertModal from "../components/AlertModal";
+import { API_URL } from "@/lib/config";
 
 export default function ResetPasswordScreen() {
   
@@ -21,7 +22,6 @@ export default function ResetPasswordScreen() {
     password: "",
     confirmPassword: "",
   });
-  const apiUrl = process.env.API_URL;
 
   useEffect(() => {
     if (params?.code) {
@@ -70,7 +70,7 @@ export default function ResetPasswordScreen() {
       const username = await AsyncStorage.getItem('saved_username');
 
       try {
-        await axios.put(`${apiUrl}/api/set-pin`, {username, password});
+        await axios.put(`${API_URL}/api/set-pin`, {username, password});
         console.log("newset แล้ว")
       } catch (err) {
         console.error('❌ Update failed:', err);

@@ -19,7 +19,6 @@ export default function SetPasswordScreen() {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertMessage2, setAlertMessage2] = useState('');
-  const apiUrl = process.env.API_URL;
   const router = useRouter();
 
   useEffect(() => {
@@ -43,7 +42,7 @@ export default function SetPasswordScreen() {
       await AsyncStorage.setItem("saved_pin", password);
 
       try {
-        await axios.put(`${apiUrl}/api/set-pin`, {username, password});
+        await axios.put(`${API_URL}/api/set-pin`, {username, password});
         console.log("set แล้ว")
         Alert.alert("บันทึกสำเร็จ", "ตั้งค่ารหัสผ่านเรียบร้อย");
         router.replace("/");

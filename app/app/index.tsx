@@ -24,10 +24,11 @@ export default function LoginPinScreen() {
   const [alertMessage, setAlertMessage] = useState('แจ้งเตือน');
   const [alertMessage2, setAlertMessage2] = useState('');
   const socketRef = useRef<any>(null);
+  const API_URL = process.env.API_URL || 'http://localhost:5000';
 
 
   useEffect(() => {
-    socketRef.current = connSocket(`https://app.magnitudetms.com`);
+    socketRef.current = connSocket(API_URL);
     socketRef.current.on('sendMessage_admin', (data: any) => {
       console.log('reply success', data)
       setNotifications((prev) => [
@@ -62,7 +63,7 @@ export default function LoginPinScreen() {
   const handleSubmit = async (password: string) => {
     const username = await AsyncStorage.getItem('saved_username');
     try {
-      const response = await axios.post(`https://app.magnitudetms.com/api/login`, {
+      const response = await axios.post(`${API_URL}/api/login`, {
         username,
         password,
       });

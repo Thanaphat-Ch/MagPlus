@@ -7,6 +7,7 @@ import { ActivityIndicator, Alert, Dimensions, Image, Modal, Platform, SafeAreaV
 import SignatureScreen from "react-native-signature-canvas";
 import SignatureCanvas from "react-signature-canvas";
 import NavFooter from "../components/NavFooter";
+import { API_URL } from "@/lib/config";
 
 const screenWidth = Dimensions.get("window").width;
 const thumbnailSize = (screenWidth - 32 - 16) / 3;
@@ -59,8 +60,6 @@ export default function Pickup() {
   const [imageSourceModalVisible, setImageSourceModalVisible] = useState<boolean>(false);
   const [currentImageType, setCurrentImageType] = useState<"product" | "workOrder" | null>(null);
   const [loading, setLoading] = useState(false);
-  
-  const apiUrl = process.env.API_URL;
 
   useEffect(() => {
     (async () => {
@@ -215,7 +214,7 @@ export default function Pickup() {
     }
     
     try {
-        const response = await fetch(`${apiUrl}/api/delivery/start-delivery`, {
+        const response = await fetch(`${API_URL}/api/delivery/start-delivery`, {
             method: "POST",
             body: formData,
         });

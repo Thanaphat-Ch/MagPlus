@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react"
-import axios from "axios"
 import io from "socket.io-client"
 import { Pie, Line } from "react-chartjs-2"
 import { Chart, ArcElement, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale, Filler } from "chart.js"
+import api from "../api";
 
 Chart.register(ArcElement, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale, Filler)
-const API_URL = import.meta.env.API_URL
+const API_URL = import.meta.env.VITE_API_URL
 
 const lineOptions = {
   responsive: true,
@@ -39,14 +39,18 @@ const AdminDashboard = () => {
   const [availableTruckList, setAvailableTruckList] = useState([])
 
   useEffect(() => {
-    const socket = io(`${API_URL}`)
-    axios
-      .get(`${API_URL}/api/active-users`)
-      .then((res) => setActiveUsers(res.data.activeUsers || 0))
-      .catch((err) => console.error("Error loading active users:", err))
-    socket.on("activeUsers", (count) => setActiveUsers(count))
-    return () => socket.off("activeUsers")
-  }, [])
+  const socket = io(API_URL)
+  api.get("/active-users", { silent: true })
+    .then((res) => setActiveUsers(res.data.activeUsers || 0))
+    .catch((err) => console.error("Error loading active users:", err))
+
+  socket.on("activeUsers", (count) => setActiveUsers(count))
+
+  return () => {
+    socket.off("activeUsers")
+    socket.disconnect()
+  }
+}, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,14 +62,14 @@ const AdminDashboard = () => {
         if (!token) throw new Error("Authentication token not found")
 
         const [usersRes, activeRes, jobsSummaryRes, trucksRes, availableRes, maintenanceRes, accidentRes, parkRes] = await Promise.all([
-          axios.get(`${API_URL}/api/readall`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API_URL}/api/active-users`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API_URL}/api/jobs/summary`),
-          axios.get(`${API_URL}/api/total-trucks`),
-          axios.get(`${API_URL}/api/available-trucks`),
-          axios.get(`${API_URL}/api/trucks/maintenance`),
-          axios.get(`${API_URL}/api/trucks/accident`),
-          axios.get(`${API_URL}/api/trucks/park`),
+          api.get("/readall"),
+          api.get("/active-users"),
+          api.get("/jobs/summary"),
+          api.get("/total-trucks"),
+          api.get("/available-trucks"),
+          api.get("/trucks/maintenance"),
+          api.get("/trucks/accident"),
+          api.get("/trucks/park"),
         ])
 
         setUsers(usersRes.data || [])
@@ -97,7 +101,6 @@ const AdminDashboard = () => {
   }, [])
 
   useEffect(() => {
-    // จำลอง API response
     const mockData = [
       { id: 1, plate_number: "1กข 1234", driver_name: "สมชาย ใจดี", driver_assigned: true },
       { id: 2, plate_number: "2ขจ 4567", driver_name: "ประเสริฐ ขยัน", driver_assigned: true },

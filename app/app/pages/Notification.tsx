@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { io } from "socket.io-client";
 import NavFooter from "../components/NavFooter";
+import { API_URL } from "@/lib/config";
 
 type Notification = {
   id: number;
@@ -20,8 +21,6 @@ export default function NotificationScreen() {
   const [count, setCount] = useState(0);
   const isFocused = useIsFocused();
   const [userId, setUserId] = useState<string | null>(null);
-  const apiUrl = process.env.API_URL;
-
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then((id) => setUserId(id));
@@ -53,7 +52,7 @@ export default function NotificationScreen() {
         console.log("Cannot connect: userId is missing.");
         return;
       }
-      const socket = io(apiUrl, {
+      const socket = io(API_URL, {
         transports: ["websocket"],
       });
 

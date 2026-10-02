@@ -2,12 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View, } from "react-native";
+import { ActivityIndicator, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View, } from "react-native";
 import NavFooter from "../components/NavFooter";
-
-const SERVER = Platform.OS === "android" 
-    ? "${apiUrl}" 
-    : "${apiUrl}";
 
 interface DailyIncome {
   date: string; 

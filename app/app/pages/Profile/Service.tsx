@@ -1,23 +1,24 @@
 import NavFooter from "@/app/components/NavFooter";
+import { API_URL } from "@/lib/config";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker, {
-    DateTimePickerEvent,
+  DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React, { FC, useEffect, useState } from "react";
 import {
-    Alert,
-    FlatList,
-    Image,
-    Modal,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import DropDownPicker, { ItemType } from "react-native-dropdown-picker";
 
@@ -139,9 +140,6 @@ export default function ServicePage() {
 
     // --- 🔽 [เพิ่ม/แก้ไข Logic ทั้งหมดด้านล่างนี้] ---
 
-
-    const apiUrl = process.env.API_URL;
-
     // 2. ดึง Token สำหรับยืนยันตัวตน
 
     const token = await AsyncStorage.getItem("token");
@@ -157,7 +155,7 @@ export default function ServicePage() {
       // 4. เพิ่มข้อมูล Text
       formData.append("repairType", repairType);
       formData.append("reason", reason);
-      formData.append("serviceDate", serviceDate.toISOString()); 
+      formData.append("serviceDate", serviceDate.toISOString());
 
       // 5. เพิ่มรูปภาพ (จัดการแยก Platform)
       for (const uri of serviceImages) {
@@ -181,7 +179,7 @@ export default function ServicePage() {
       }
 
       // 6. ส่ง Request ไปยัง API
-      const response = await fetch(`${apiUrl}/api/service2`, {
+      const response = await fetch(`${API_URL}/api/service2`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -224,7 +222,7 @@ export default function ServicePage() {
       console.error("Submit service error:", error);
       Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
     }
-    
+
   };
 
   const handlePickImage = async () => {
@@ -370,8 +368,7 @@ export default function ServicePage() {
           <TouchableOpacity
             onPress={handleServiceSubmit}
             disabled={isLoading}
-            className={`rounded-full py-4 mt-6 shadow-md shadow-indigo-400/50 ${
-              isLoading ? "bg-indigo-400" : "bg-indigo-600 active:bg-indigo-700"}`}
+            className={`rounded-full py-4 mt-6 shadow-md shadow-indigo-400/50 ${isLoading ? "bg-indigo-400" : "bg-indigo-600 active:bg-indigo-700"}`}
           >
             <Text className="text-center text-white font-bold text-lg">
               {isLoading ? "กำลังส่ง..." : "ส่งเรื่องแจ้งซ่อม"}

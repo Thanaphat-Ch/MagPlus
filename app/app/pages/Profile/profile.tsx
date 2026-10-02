@@ -21,6 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import NavFooter from "../../components/NavFooter";
 import { ImageCropPreview } from "./components/ImageCropPreview";
 import LeaveFormModal from "./components/LeaveFormModal";
+import { API_URL } from "@/lib/config";
 
 interface Profile {
   username?: string;
@@ -49,14 +50,13 @@ export default function Profile() {
   const [checkInTime, setCheckInTime] = useState<Date | null>(null);
   const [checkOutTime, setCheckOutTime] = useState<Date | null>(null);
   const [modalLeaveVisible, setModalLeaveVisible] = useState(false);
-  const apiUrl = process.env.API_URL;
   
   const fetchProfile = async () => {
     const token = await AsyncStorage.getItem("token");
     if (!token) return router.replace("/");
   
     try {
-      const res = await axios.get(`${apiUrl}/api/user/profile`, {
+      const res = await axios.get(`${API_URL}/api/user/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProfile(res.data);
@@ -133,7 +133,7 @@ export default function Profile() {
       formData.append("userId", userId);
 
       const res = await axios.post(
-        `${apiUrl}/api/upload?Up_type=driver`,
+        `${API_URL}/api/upload?Up_type=driver`,
         formData,
         {
           headers: {
@@ -148,7 +148,7 @@ export default function Profile() {
       console.log("✅ Upload success:", profile);
       if (!profile) return console.log('!uploadedPath')
 
-      await axios.put(`${apiUrl}/api/user/update`, { profile },
+      await axios.put(`${API_URL}/api/user/update`, { profile },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -175,7 +175,7 @@ export default function Profile() {
       const token = await AsyncStorage.getItem("token");
       if (token) {
         await axios.post(
-          `${apiUrl}/api/logout`,
+          `${API_URL}/api/logout`,
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -220,7 +220,7 @@ export default function Profile() {
     setCheckInTime(now);
 
     try {
-        const { data } = await axios.post(`${apiUrl}/api/attendance/checkin`, {
+        const { data } = await axios.post(`${API_URL}/api/attendance/checkin`, {
             user_id: userId,
         });
 
@@ -237,7 +237,7 @@ export default function Profile() {
     setCheckOutTime(now);
 
     try {
-        const { data } = await axios.post(`${apiUrl}/api/attendance/checkout`, {
+        const { data } = await axios.post(`${API_URL}/api/attendance/checkout`, {
             user_id: userId,
         });
 

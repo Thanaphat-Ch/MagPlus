@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import { io } from "socket.io-client";
-import { requestForToken } from '../firebase';
+// import { requestForToken } from '../firebase';
 
 import ChatWindow from "../components/ChatWindow";
 
-const API_URL = "http://localhost:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 export default function AdminChatDashboard() {
   const [adminId, setAdminId] = useState(null);
@@ -21,7 +21,7 @@ export default function AdminChatDashboard() {
         const decoded = jwtDecode(token);
         const currentAdminId = decoded.id;
         setAdminId(currentAdminId);
-        requestForToken(currentAdminId);
+        // requestForToken(currentAdminId);
       } catch (e) {
         console.error("Invalid token:", e);
         setIsLoading(false);

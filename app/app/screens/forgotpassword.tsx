@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import AlertModal from "../components/AlertModal";
 import { h4, page, pageBody } from "../styles/tw";
+import { API_URL } from "@/lib/config";
 
 export default function DriverRegisterScreen() {
   const [idCard, setIdCard] = useState("");
@@ -20,8 +21,6 @@ export default function DriverRegisterScreen() {
   const [phoneError, setPhoneError] = useState("");
   const [licenseError, setLicenseError] = useState("");
   const router = useRouter();
-
-  const apiUrl = process.env.API_URL;
 
   useEffect(() => {
     const isValid =
@@ -48,7 +47,7 @@ export default function DriverRegisterScreen() {
     await AsyncStorage.setItem("U_ID", phone);
     console.log({ username, idCard, phone, licensePlate });
         try {
-          const response = await axios.post(`${apiUrl}/api/forgot`, {
+          const response = await axios.post(`${API_URL}/api/forgot`, {
             username,
             idCard,
             phone,

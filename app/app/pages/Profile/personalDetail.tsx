@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import RowInput from "./components/RowInput";
+import { API_URL } from "@/lib/config";
 
 interface DriverData {
   D_ID: string
@@ -44,7 +45,6 @@ export default function ProfileScreen() {
   const [isViewOnly, setIsViewOnly] = useState(true)
   const [formData, setFormData] = useState<DriverData>(defaultDriverData)
   const [confirmVisible, setConfirmVisible] = useState(false)
-  const apiUrl = process.env.API_URL;
 
   useEffect(() => {
     fetchUsers()
@@ -55,7 +55,7 @@ export default function ProfileScreen() {
     if (!token) return router.replace("/")
 
     try {
-      const response = await axios.get(`${apiUrl}/api/driver/read`, {
+      const response = await axios.get(`${API_URL}/api/driver/read`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       const driver = response.data[0] || defaultDriverData;
@@ -83,7 +83,7 @@ export default function ProfileScreen() {
       const token = await AsyncStorage.getItem("token") // ถ้ามีการใช้ Bearer Token
       if (!token) return router.replace("/")
 
-      const response = await axios.put(`${apiUrl}/api/driver/update`, formData, {
+      const response = await axios.put(`${API_URL}/api/driver/update`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

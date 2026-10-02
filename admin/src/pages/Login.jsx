@@ -1,110 +1,52 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { GoogleLogin } from "@react-oauth/google";
-import { jwtDecode } from "jwt-decode";
-
-const API_URL = import.meta.env.API_URL;
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { jwtDecode } from "jwt-decode"
+import api from "../api"
 
 const Login = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const navigate = useNavigate()
 
   useEffect(() => {
-    document.title = "Login";
-  }, []);
+    document.title = "Login"
+  }, [])
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
+    e.preventDefault()
+    setError("")
 
     try {
+      const response = await api.post("/login", { username, password })
+      const data = response.data
+      if (!data.token) { throw new Error("Token missing in server response")}
 
-  const response = await fetch(`${API_URL}/api/login`, { 
-    method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }), });
-  const data = await response.json();
-    if (!response.ok) {
-      throw new Error(`Server error: ${data.message || 'Unknown error'}`);
+      localStorage.setItem("token", data.token)
+      navigate("/admin")
+    } catch (error) {
+      // กรณี interceptor alert ไปแล้ว และไม่อยากให้ขึ้น alert ซ้ำสองรอบ
+      // สามารถตั้ง state error ในหน้า UI ได้ตามปกติ
+      const msg = error.response?.data?.message || error.message || "Login failed"
+      setError(msg)
     }
-
-    if (!data.token) {
-      throw new Error('Token missing in server response');
-    }
-
-    localStorage.setItem("token", data.token);
-    navigate("/admin");
-
-
-  } catch (error) {
-    console.error("Error loading data:", error);
-    alert(`Login failed: ${error.message}`);
   }
-  };
-
-  // const handleGoogleLoginSuccess = async (credentialResponse) => {
-  //   try {
-  //     const decoded = jwt_decode(credentialResponse.credential);
-  //     // console.log("Google User:", decoded);
-
-  //     const res = await fetch(`${API_URL}/api/google-login`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({ token: credentialResponse.credential }),
-  //     });
-
-  //     const result = await res.json();
-
-  //     if (res.ok) {
-  //       localStorage.setItem("token", result.token);
-  //       navigate("/dashboard");
-  //     } else {
-  //       setError(result.message || "Google Login failed");
-  //     }
-  //   } catch (err) {
-  //     console.error("Google login error:", err);
-  //     setError("Google Login failed");
-  //   }
-  // };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
         <form onSubmit={handleLogin} className="space-y-4">
-          {error && (
-            <div className="text-red-500 bg-red-100 p-2 rounded">{error}</div>
-          )}
+          {error && <div className="text-red-500 bg-red-100 p-2 rounded">{error}</div>}
           <div>
             <label className="block mb-1 text-sm font-medium">Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2"
-              required
-            />
+            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full border rounded-lg px-3 py-2" required />
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2"
-              required
-            />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border rounded-lg px-3 py-2" required />
           </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
-          >
+          <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
             Login
           </button>
         </form>
@@ -123,7 +65,7 @@ const Login = () => {
         </div> */}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login
