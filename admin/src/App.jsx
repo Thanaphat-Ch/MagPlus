@@ -11,7 +11,6 @@ import Truck from "./pages/Truck";
 import TimeRecord from "./pages/TimeRecord";
 import LeaveRequest from "./pages/LeaveRequest";
 import Service from "./pages/Service";
-import MultiUpload from "./pages/Multiupload";
 import AdminChatDashboard from "./pages/AdminChatDashboard"
 import Notification from "./pages/Notification"
 import AddAsset from "./pages/Fleet-manage/AddAsset"
@@ -34,7 +33,6 @@ function App() {
           <Route path="/attendance/time-record" element={<TimeRecord/>} />
           <Route path="/attendance/leave-request" element={<LeaveRequest/>} />
           <Route path="/service" element={<Service/>} />
-          <Route path="/multiUpload" element={<MultiUpload/>} />
           <Route path="/adminChatDashboard" element={<AdminChatDashboard/>} />
           <Route path="/notification" element={<Notification />} />
           <Route path="/addAsset" element={<AddAsset />} />

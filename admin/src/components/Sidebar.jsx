@@ -54,9 +54,9 @@ useEffect(() => {
   ]
   
   const ServiceMenu = [
-    { to: "/service", label: "ใบแจ้งซ่อม", icon: <FaFileInvoiceDollar /> },
+    // { to: "/service", label: "ใบแจ้งซ่อม", icon: <FaFileInvoiceDollar /> },
     { to: "/addAsset", label: "เพิ่มทรัพย์สิน", icon: <FaFileInvoiceDollar /> },
-    { to: "/service", label: "ใบเบิก", icon: <FaFileInvoiceDollar /> },
+    // { to: "/service", label: "ใบเบิก", icon: <FaFileInvoiceDollar /> },
     { to: "/tranferAsset", label: "โอนย้าย", icon: <FaFileInvoiceDollar /> },
 
   ]

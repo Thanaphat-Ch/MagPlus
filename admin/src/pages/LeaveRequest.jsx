@@ -1,335 +1,166 @@
-// import React, { useEffect, useState, useCallback } from "react";
-// import LeaveRequestCard from "../components/LeaveRequestCard";
-// import LeaveRequestDetailModal from "../components/LeaveRequestDetailModal";
-
-// const API_URL = import.meta.env.API_URL;
-
-// const FILTER_TEXTS = {
-//   all: "ทั้งหมด",
-//   pending: "รออนุมัติ",
-//   approved: "อนุมัติแล้ว",
-//   rejected: "ปฏิเสธ",
-// };
-
-// function LeaveRequest() {
-//   const [leaveRequests, setLeaveRequests] = useState([]);
-//   const [filter, setFilter] = useState("all");
-//   const [selectedRequest, setSelectedRequest] = useState(null);
-
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   const fetchLeaveRequests = useCallback(() => {
-//     setLoading(true);
-//     setError(null);
-//     fetch(`${API_URL}/api/leave`)
-//       .then((res) => {
-//         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-//         return res.json();
-//       })
-//       .then((data) => setLeaveRequests(data))
-//       .catch((err) => {
-//         console.error("❌ ERROR fetching leave:", err);
-//         setError("โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่");
-//       })
-//       .finally(() => setLoading(false));
-//   }, []);
-
-//   useEffect(() => {
-//     fetchLeaveRequests();
-//   }, [fetchLeaveRequests]);
-
-//   const handleUpdateStatus = async (id, status) => {
-//     try {
-//         const res = await fetch(`${API_URL}/api/leave/${id}/status`, {
-//             method: "PUT",
-//             headers: { "Content-Type": "application/json" },
-//             body: JSON.stringify({ status }),
-//         });
-
-//         // พยายามอ่าน response body ทุกครั้ง
-//         const responseData = await res.json(); 
-
-//         if (!res.ok) {
-//             // โยน Error ที่มีรายละเอียดจาก Server
-//             throw new Error(responseData.error || `Server responded with status ${res.status}`);
-//         }
-
-//         // ... (โค้ดสำหรับอัปเดต state เมื่อสำเร็จ) ...
-//         setLeaveRequests((prevRequests) =>
-//             prevRequests.map((req) => (req.id === id ? responseData : req))
-//         );
-//         setSelectedRequest(null);
-        
-//     } catch (err) {
-//         // ✅ แสดงข้อความ Error ที่ชัดเจน
-//         console.error("❌ ERROR updating status:", err);
-//         alert(`อัปเดตสถานะไม่สำเร็จ: ${err.message || "โปรดตรวจสอบการเชื่อมต่อ Server"}`);
-//     }
-// };
-
-//   const filteredRequests = leaveRequests.filter((req) =>
-//     filter === "all" ? true : req.status === filter
-//   );
-
-//   return (
-//         <main className="flex-1 p-4 sm:p-6 lg:p-8">
-//           {/* Title desktop */}
-//           <h1 className="hidden md:block text-3xl font-extrabold mb-6 text-gray-800">
-//             ระบบอนุมัติการลางาน
-//           </h1>
-
-//           {/* Filter buttons */}
-//           <div className="mb-6 flex flex-wrap gap-3">
-//             {Object.keys(FILTER_TEXTS).map((f) => (
-//               <button
-//                 key={f}
-//                 onClick={() => setFilter(f)}
-//                 className={`px-5 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 ${
-//                   filter === f
-//                     ? "bg-blue-600 text-white shadow-lg"
-//                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-//                 }`}
-//               >
-//                 {FILTER_TEXTS[f]}
-//               </button>
-//             ))}
-//           </div>
-
-//           {/* Requests */}
-//           {loading ? (
-//             <p className="text-gray-500">⏳ กำลังโหลดข้อมูล...</p>
-//           ) : error ? (
-//             <p className="text-red-500">{error}</p>
-//           ) : filteredRequests.length === 0 ? (
-//             <p className="text-gray-500">ไม่มีคำขอลางาน</p>
-//           ) : (
-//             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-//               {filteredRequests.map((req) => (
-//                 <LeaveRequestCard
-//                   key={req.id}
-//                   request={req}
-//                   onCardClick={() => setSelectedRequest(req)}
-//                 />
-//               ))}
-//             </div>
-//           )}
-//       {/* Modal */}
-//       {selectedRequest && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-white/10 to-black/30 backdrop-blur-xl">
-//           <div className="animate-fadeInUp">
-//             <LeaveRequestDetailModal
-//               request={selectedRequest}
-//               onClose={() => setSelectedRequest(null)}
-//               onUpdateStatus={handleUpdateStatus}
-//             />
-//           </div>
-//         </div>
-//       )}
-//     </main>
-//   )}
-
-
-// export default LeaveRequest;
-
-import React, { useEffect, useState, useCallback, useMemo } from "react"; 
-import LeaveRequestCard from "../components/LeaveRequestCard";
-import LeaveRequestDetailModal from "../components/LeaveRequestDetailModal";
-
-const API_URL = import.meta.env.API_URL;
+import React, { useEffect, useState, useCallback, useMemo } from "react"
+import LeaveRequestCard from "../components/LeaveRequestCard"
+import LeaveRequestDetailModal from "../components/LeaveRequestDetailModal"
+import api from "../api" // ✅ เปลี่ยนมาใช้ api กลางที่มี Token และ Interceptor
 
 const FILTER_TEXTS = {
- all: "ทั้งหมด",
- pending: "รออนุมัติ",
- approved: "อนุมัติแล้ว",
- rejected: "ปฏิเสธ",
-};
+  all: "ทั้งหมด",
+  pending: "รออนุมัติ",
+  approved: "อนุมัติแล้ว",
+  rejected: "ปฏิเสธ",
+}
 
 const ICONS = {
   pending: "🕒",
   approved: "✔️",
   rejected: "❌",
   total: "📊",
-};
+}
 
-
+// แยก StatCard ไว้นอกคอมโพเนนต์หลัก
 function StatCard({ title, value, type, loading }) {
   const colors = {
-    pending: "border-yellow-500",
-    approved: "border-green-500",
-    rejected: "border-red-500",
+    pending: "border-amber-500",
+    approved: "border-emerald-500",
+    rejected: "border-rose-500",
     total: "border-blue-500",
-  };
+  }
 
   return (
-    <div
-      className={`bg-white p-5 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl border-l-4 ${
-        colors[type] || "border-gray-300"
-      }`}
-    >
+    <div className={`bg-white p-5 rounded-2xl shadow-sm border border-slate-100 transition-all duration-200 hover:shadow-md border-l-4 ${colors[type] || "border-slate-300"}`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          {loading ? (
-            <div className="h-8 w-12 bg-gray-200 rounded animate-pulse mt-1"></div>
-          ) : (
-            <p className="text-3xl font-bold text-gray-900">{value}</p>
-          )}
+          <p className="text-sm font-medium text-slate-500">{title}</p>
+          {loading ? <div className="h-8 w-14 bg-slate-200 rounded-md animate-pulse mt-1.5"></div> : <p className="text-3xl font-bold tracking-tight text-slate-800 mt-1">{value}</p>}
         </div>
         <div className="text-3xl opacity-80">{ICONS[type]}</div>
       </div>
     </div>
-  );
+  )
 }
 
-function LeaveRequest() {
-  const [leaveRequests, setLeaveRequests] = useState([]);
-  const [filter, setFilter] = useState("all");
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const fetchLeaveRequests = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    fetch(`${API_URL}/api/leave`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => setLeaveRequests(data))
-      .catch((err) => {
-        console.error("❌ ERROR fetching leave:", err);
-        setError("โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่");
-      })
-      .finally(() => setLoading(false));
-  }, []);
+export default function LeaveRequest() {
+  const [leaveRequests, setLeaveRequests] = useState([])
+  const [filter, setFilter] = useState("all")
+  const [selectedRequest, setSelectedRequest] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetchLeaveRequests();
-  }, [fetchLeaveRequests]);
+    document.title = "Leave Management"
+  }, [])
 
+  // ดึงรายการขอลางานผ่าน api กลาง
+  const fetchLeaveRequests = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await api.get("/leave", { silent: true })
+      setLeaveRequests(res.data || [])
+    } catch (err) {
+      console.error("❌ ERROR fetching leave:", err)
+      setError("ไม่สามารถโหลดข้อมูลคำขอลางานได้ กรุณาลองใหม่อีกครั้ง")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchLeaveRequests()
+  }, [fetchLeaveRequests])
+
+  // อัปเดตสถานะ (อนุมัติ / ปฏิเสธ)
   const handleUpdateStatus = async (id, status) => {
     try {
-        const res = await fetch(`${API_URL}/api/leave/${id}/status`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status }),
-        });
-        const responseData = await res.json(); 
-        if (!res.ok) {
-              throw new Error(responseData.error || `Server responded with status ${res.status}`);
-        }
-        setLeaveRequests((prevRequests) =>
-            prevRequests.map((req) => (req.id === id ? responseData : req))
-        );
-        setSelectedRequest(null);
+      const res = await api.put(`/leave/${id}/status`, { status })
 
+      // อัปเดตข้อมูลในตารางทันทีโดยไม่ต้อง fetch ใหม่ทั้งหมด
+      setLeaveRequests((prev) => prev.map((req) => (req.id === id ? { ...req, ...res.data } : req)))
+      setSelectedRequest(null)
     } catch (err) {
-        console.error("❌ ERROR updating status:", err);
-        alert(`อัปเดตสถานะไม่สำเร็จ: ${err.message || "โปรดตรวจสอบการเชื่อมต่อ Server"}`);
+      console.error("❌ ERROR updating status:", err)
+      const errorMsg = err.response?.data?.message || err.message || "เกิดข้อผิดพลาดในการอัปเดต"
+      alert(`อัปเดตสถานะไม่สำเร็จ: ${errorMsg}`)
     }
-  };
+  }
 
+  // คำนวณสถิติ
   const stats = useMemo(() => {
     return {
       pending: leaveRequests.filter((r) => r.status === "pending").length,
       approved: leaveRequests.filter((r) => r.status === "approved").length,
       rejected: leaveRequests.filter((r) => r.status === "rejected").length,
       total: leaveRequests.length,
-    };
-  }, [leaveRequests]);
+    }
+  }, [leaveRequests])
 
-  const filteredRequests = leaveRequests.filter((req) =>
-    filter === "all" ? true : req.status === filter
-  );
+  // ฟิลเตอร์ข้อมูลตามแท็บที่เลือก
+  const filteredRequests = useMemo(() => {
+    return leaveRequests.filter((req) => (filter === "all" ? true : req.status === filter))
+  }, [leaveRequests, filter])
 
   return (
-    <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-extrabold mb-6 text-gray-800">แดชบอร์ดระบบการลางาน</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="รออนุมัติ"
-          value={stats.pending}
-          type="pending"
-          loading={loading}
-        />
-        <StatCard
-          title="อนุมัติแล้ว"
-          value={stats.approved}
-          type="approved"
-          loading={loading}
-        />
-        <StatCard
-          title="ปฏิเสธ"
-          value={stats.rejected}
-          type="rejected"
-          loading={loading}
-        />
-        <StatCard
-          title="คำขอทั้งหมด"
-          value={stats.total}
-          type="total"
-          loading={loading}
-        />
+    <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">ระบบอนุมัติการลางาน</h1>
+        <button onClick={fetchLeaveRequests} disabled={loading} className="text-sm text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm transition disabled:opacity-50">
+          {loading ? "กำลังรีเฟรช..." : "รีเฟรชข้อมูล"}
+        </button>
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow-lg">
-        <h2 className="text-2xl font-bold mb-4 text-gray-700">
-          รายการคำขอลางาน
-        </h2>
+      {/* Grid บัตรสถิติ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard title="รออนุมัติ" value={stats.pending} type="pending" loading={loading} />
+        <StatCard title="อนุมัติแล้ว" value={stats.approved} type="approved" loading={loading} />
+        <StatCard title="ปฏิเสธ" value={stats.rejected} type="rejected" loading={loading} />
+        <StatCard title="คำขอทั้งหมด" value={stats.total} type="total" loading={loading} />
+      </div>
 
-        <div className="mb-6 flex flex-wrap gap-3">
-          {Object.keys(FILTER_TEXTS).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-5 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 ${
-                filter === f
-                  ? "bg-blue-600 text-white shadow-lg"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
+      {/* ส่วนรายการและแท็บ Filter */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-lg font-bold text-slate-800">รายการคำขอลางาน</h2>
+
+          <div className="flex flex-wrap gap-2">
+            {Object.keys(FILTER_TEXTS).map((f) => (
+              <button key={f} onClick={() => setFilter(f)} className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${filter === f ? "bg-blue-600 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
                 {FILTER_TEXTS[f]}
-            </button>
-          ))}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {/* State การแสดงผล */}
         {loading && filteredRequests.length === 0 ? (
-          <p className="text-gray-500 py-4">⏳ กำลังโหลดข้อมูล...</p>
+          <div className="py-16 text-center text-slate-400 font-medium">⏳ กำลังโหลดข้อมูลคำขอ...</div>
         ) : error ? (
-          <p className="text-red-500 py-4">{error}</p>
+          <div className="py-12 text-center text-rose-500 font-medium">{error}</div>
         ) : filteredRequests.length === 0 ? (
-          <div className="text-center py-10">
-            <p className="text-gray-500 text-lg">
-                🎉 ไม่มีคำขอลางานในหมวดหมู่นี้
-            </p>
+          <div className="text-center py-16 text-slate-400">
+            <span className="text-3xl block mb-2">📋</span>
+            ไม่มีคำขอลางานในหมวดหมู่นี้
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredRequests.map((req) => (
-              <LeaveRequestCard
-                key={req.id}
-                request={req}
-                onCardClick={() => setSelectedRequest(req)}
-              />
+              <LeaveRequestCard key={req.id} request={req} onCardClick={() => setSelectedRequest(req)} />
             ))}
           </div>
         )}
-      </div> 
+      </div>
 
+      {/* Modal รายละเอียดคำขอ */}
       {selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-white/10 to-black/30 backdrop-blur-xl">
-          <div className="animate-fadeInUp">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4" onClick={() => setSelectedRequest(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl">
             <LeaveRequestDetailModal
               request={selectedRequest}
               onClose={() => setSelectedRequest(null)}
-              nUpdateStatus={handleUpdateStatus}
+              onUpdateStatus={handleUpdateStatus} // ✅ แก้ไขสะกดคำเชื่อมต่อ Event แล้ว
             />
           </div>
         </div>
       )}
     </main>
-  );
+  )
 }
-
-export default LeaveRequest;

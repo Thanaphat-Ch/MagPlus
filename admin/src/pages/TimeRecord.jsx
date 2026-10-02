@@ -1,165 +1,254 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { FiClock, FiMenu } from "react-icons/fi";
+import React, { useEffect, useState, useMemo } from "react"
+import { FiClock, FiSearch } from "react-icons/fi"
+import Sidebar from "../components/Sidebar"
+import api from "../api"
 
-const API_URL = import.meta.env.API_URL;
+const AVATAR_COLORS = [
+  "bg-blue-100 text-blue-700 border-blue-200",
+  "bg-emerald-100 text-emerald-700 border-emerald-200",
+  "bg-amber-100 text-amber-700 border-amber-200",
+  "bg-rose-100 text-rose-700 border-rose-200",
+  "bg-violet-100 text-violet-700 border-violet-200",
+  "bg-cyan-100 text-cyan-700 border-cyan-200",
+]
 
-const InitialsCircle = ({ name, surname }) => {
-    const initials = `${name?.charAt(0) || ''}${surname?.charAt(0) || ''}`.toUpperCase();
-    
-    const hashCode = (str) => {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return hash;
-    };
+const getInitialsColor = (str = "") => {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+}
 
-    const colors = [
-        'bg-blue-200 text-blue-800', 'bg-emerald-200 text-emerald-800',
-        'bg-amber-200 text-amber-800', 'bg-rose-200 text-rose-800',
-        'bg-violet-200 text-violet-800', 'bg-cyan-200 text-cyan-800'
-    ];
-    const colorClass = colors[Math.abs(hashCode(name || '')) % colors.length];
+const InitialsCircle = ({ name = "", surname = "" }) => {
+  const initials = `${name.charAt(0)}${surname.charAt(0)}`.toUpperCase() || "?"
+  const colorClass = useMemo(() => getInitialsColor(name + surname), [name, surname])
 
-    return (
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${colorClass}`}>
-            {initials}
-        </div>
-    );
-};
-
+  return (
+    <div
+      className={`w-10 h-10 rounded-full border flex items-center justify-center font-bold text-xs shrink-0 select-none ${colorClass}`}
+    >
+      {initials}
+    </div>
+  )
+}
 
 function TimeRecord() {
-  const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [records, setRecords] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedDate, setSelectedDate] = useState("")
 
   useEffect(() => {
-    const fetchAttendance = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/attendance`);
-        setRecords(res.data);
-      } catch (error) {
-        console.error("Error fetching attendance:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAttendance();
-  }, []);
+    document.title = "ประวัติการลงเวลา"
+    fetchAttendance()
+  }, [])
+
+  const fetchAttendance = async () => {
+    setLoading(true)
+    try {
+      const res = await api.get("/attendance", { silent: true })
+      setRecords(res.data || [])
+    } catch (error) {
+      console.error("Error fetching attendance:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const formatTime = (dateTimeString) => {
-    if (!dateTimeString) return null; 
+    if (!dateTimeString) return null
     return new Date(dateTimeString).toLocaleTimeString("th-TH", {
       hour: "2-digit",
       minute: "2-digit",
-    });
-  };
-  
+    })
+  }
+
   const formatDate = (dateString) => {
-    if (!dateString) return "-";
+    if (!dateString) return "-"
     return new Date(dateString).toLocaleDateString("th-TH", {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
-  };
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+  }
+
+  const filteredRecords = useMemo(() => {
+    return records.filter((r) => {
+      const fullName = `${r.name || ""} ${r.surname || ""} ${r.user_id || ""}`.toLowerCase()
+      const matchSearch = fullName.includes(searchTerm.toLowerCase().trim())
+      
+      let matchDate = true
+      if (selectedDate && r.date) {
+        matchDate = r.date.startsWith(selectedDate)
+      }
+
+      return matchSearch && matchDate
+    })
+  }, [records, searchTerm, selectedDate])
 
   return (
-    
-        <main className="flex-1 p-4 md:p-8 mb-5">
-          <h1 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800 border-b-2 border-gray-200 pb-3 flex items-center">
-            <FiClock className="mr-3 text-indigo-500" />
-            ประวัติการลงเวลา
-          </h1>
+    <div className="flex min-h-screen bg-slate-50">
+      <Sidebar />
 
-          {loading ? (
-            <p className="text-center text-gray-500 animate-pulse mt-10">กำลังโหลดข้อมูล...</p>
-          ) : (
-            <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-200/60">
-              <div className="overflow-x-auto hidden md:block">
-                <table className="min-w-full">
-                  <thead className="border-b-2 border-gray-200 bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">พนักงาน</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">วันที่</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">เวลาเข้างาน</th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">เวลาออกงาน</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {records.length > 0 ? (
-                      records.map((record) => (
-                        <tr key={record.id} className="hover:bg-indigo-50/40 transition-colors duration-150">
-                          <td className="px-6 py-3 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <InitialsCircle name={record.name} surname={record.surname} />
-                              <div className="ml-4">
-                                <div className="text-md font-bold text-gray-900">{record.name} {record.surname}</div>
-                                <div className="text-xs text-gray-500">User ID: {record.user_id}</div>
+      <main className="flex-1 p-4 md:p-8 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 flex items-center gap-2">
+              <FiClock className="text-blue-600" />
+              ประวัติการลงเวลา
+            </h1>
+            <p className="text-xs md:text-sm text-slate-500 mt-1">
+              ตรวจสอบเวลาเข้า-ออกงานของพนักงานทั้งหมด
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 sm:flex-initial">
+              <FiSearch className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="ค้นหาชื่อ หรือ User ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-56"
+              />
+            </div>
+
+            <div className="relative">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {(searchTerm || selectedDate) && (
+              <button
+                onClick={() => {
+                  setSearchTerm("")
+                  setSelectedDate("")
+                }}
+                className="text-xs text-rose-500 hover:underline px-2 py-1"
+              >
+                ล้างฟิลเตอร์
+              </button>
+            )}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="py-20 text-center text-slate-400 font-medium animate-pulse">
+            กำลังโหลดข้อมูลบันทึกเวลา...
+          </div>
+        ) : (
+          <div className="bg-white shadow-sm rounded-2xl border border-slate-200/80 overflow-hidden">
+            <div className="overflow-x-auto hidden md:block">
+              <table className="min-w-full divide-y divide-slate-100">
+                <thead className="bg-slate-50 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                  <tr>
+                    <th className="px-6 py-3.5 text-left">พนักงาน</th>
+                    <th className="px-6 py-3.5 text-left">วันที่</th>
+                    <th className="px-6 py-3.5 text-center">เวลาเข้างาน</th>
+                    <th className="px-6 py-3.5 text-center">เวลาออกงาน</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm">
+                  {filteredRecords.length > 0 ? (
+                    filteredRecords.map((record) => (
+                      <tr key={record.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="px-6 py-3.5 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <InitialsCircle name={record.name} surname={record.surname} />
+                            <div>
+                              <div className="font-semibold text-slate-800">
+                                {record.name} {record.surname}
+                              </div>
+                              <div className="text-xs text-slate-400 font-mono">
+                                ID: {record.user_id}
                               </div>
                             </div>
-                          </td>
-                          <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-600">
-                            {formatDate(record.date)}
-                          </td>
-                          <td className="px-6 py-3 whitespace-nowrap text-center">
-                            {formatTime(record.check_in_time) ? (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                                {formatTime(record.check_in_time)}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-3 whitespace-nowrap text-center">
-                            {formatTime(record.check_out_time) ? (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                                {formatTime(record.check_out_time)}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="4" className="px-6 py-10 text-center text-gray-500">ไม่มีข้อมูลการเข้างาน</td>
+                          </div>
+                        </td>
+                        <td className="px-6 py-3.5 whitespace-nowrap text-slate-600">
+                          {formatDate(record.date)}
+                        </td>
+                        <td className="px-6 py-3.5 whitespace-nowrap text-center">
+                          {formatTime(record.check_in_time) ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              {formatTime(record.check_in_time)}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3.5 whitespace-nowrap text-center">
+                          {formatTime(record.check_out_time) ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                              {formatTime(record.check_out_time)}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">-</span>
+                          )}
+                        </td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div className="md:hidden divide-y divide-gray-200">
-                {records.length > 0 ? (
-                  records.map((record) => (
-                    <div key={record.id} className="p-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <p className="text-base font-bold text-indigo-700">{record.name} {record.surname}</p>
-                        <p className="text-sm text-gray-600">{formatDate(record.date)}</p>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="px-6 py-12 text-center text-slate-400">
+                        ไม่พบข้อมูลการลงเวลา
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden divide-y divide-slate-100">
+              {filteredRecords.length > 0 ? (
+                filteredRecords.map((record) => (
+                  <div key={record.id} className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <InitialsCircle name={record.name} surname={record.surname} />
+                        <div>
+                          <p className="font-semibold text-slate-800 text-sm">
+                            {record.name} {record.surname}
+                          </p>
+                          <p className="text-[11px] text-slate-400 font-mono">ID: {record.user_id}</p>
+                        </div>
                       </div>
-                      <div className="flex justify-around bg-gray-50 p-3 rounded-lg border">
-                        <div className="text-center">
-                          <p className="text-xs text-gray-500 mb-1">เข้างาน</p>
-                          <p className="font-semibold text-green-600">{formatTime(record.check_in_time) || '-'}</p>
-                        </div>
-                        <div className="border-l border-gray-200"></div>
-                        <div className="text-center">
-                          <p className="text-xs text-gray-500 mb-1">ออกงาน</p>
-                          <p className="font-semibold text-red-600">{formatTime(record.check_out_time) || '-'}</p>
-                        </div>
+                      <span className="text-xs text-slate-500 font-medium">
+                        {formatDate(record.date)}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-center">
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-medium mb-0.5">เข้างาน</p>
+                        <p className="text-sm font-semibold text-emerald-600">
+                          {formatTime(record.check_in_time) || "-"}
+                        </p>
+                      </div>
+                      <div className="border-l border-slate-200">
+                        <p className="text-[10px] text-slate-400 font-medium mb-0.5">ออกงาน</p>
+                        <p className="text-sm font-semibold text-rose-600">
+                          {formatTime(record.check_out_time) || "-"}
+                        </p>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <p className="p-10 text-center text-gray-500">ไม่มีข้อมูลการเข้างาน</p>
-                )}
-              </div>
+                  </div>
+                ))
+              ) : (
+                <p className="py-12 text-center text-slate-400 text-sm">ไม่พบข้อมูลการลงเวลา</p>
+              )}
             </div>
-          )}
-        </main>
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}
 
-)}
-
-export default TimeRecord;
+export default TimeRecord
