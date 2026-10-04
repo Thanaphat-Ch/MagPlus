@@ -11,6 +11,8 @@ const path = require("path");
 const fs = require("fs");
 //const sharp = require("sharp");
 const { error } = require('console');
+const admin = require('firebase-admin');
+const { cert } = require('firebase-admin');
 
 const prefixUrl = process.env.URL_STORAGE || 'http://localhost:5000';
 
@@ -22,10 +24,9 @@ require('dotenv').config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const dbPromise = db.promise();
-const admin = require('firebase-admin');
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: cert(serviceAccount)
 });
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -2387,4 +2388,6 @@ function deleteFile(filePath) {
   }
 }
 
-server.listen(5000, () => console.log('🚀 Server running on http://localhost:5000'));
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, '0.0.0.0', () => { console.log(`🚀 Server running on port ${PORT}`);});
