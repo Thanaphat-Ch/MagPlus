@@ -6,18 +6,17 @@ const API_BASE_URL = import.meta.env.VITE_API_URL
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10 วินาที
+  timeout: 10000,
 })
 
-// ป้องกันการเด้งซ้ำซ้อน
 let isRedirecting = false
 
-// ฟังก์ชันกลางสำหรับเคลียร์ค่าและเตะกลับหน้า Login
 const handleForceLogout = (message) => {
   if (isRedirecting) return
   isRedirecting = true
 
   localStorage.removeItem("token")
+  localStorage.removeItem("role")
   if (message) alert(message)
 
   if (window.location.pathname !== "/") {
@@ -27,7 +26,7 @@ const handleForceLogout = (message) => {
   }
 }
 
-// Request Interceptor: บังคับว่าต้องมี Token ก่อนยิงทุกครั้ง
+// Request Interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token")
@@ -35,12 +34,24 @@ api.interceptors.request.use(
       handleForceLogout("ไม่พบสิทธิ์การใช้งาน กรุณาเข้าสู่ระบบก่อน")
       return Promise.reject(new axios.Cancel("No token found. Request aborted."))
     }
+
+    const role = localStorage.getItem("role")
+    const method = config.method?.toLowerCase()
+    if (role === "guest" && method !== "get") {
+      const blockedMsg = "🔒 สิทธิ์ Guest สามารถดูข้อมูลได้อย่างเดียว ไม่สามารถเพิ่ม แก้ไข หรือลบข้อมูลได้"
+      if (!config.silent) {
+        alert(blockedMsg)
+      }
+      return Promise.reject(new axios.Cancel(blockedMsg))
+    }
+
     config.headers.Authorization = `Bearer ${token}`
     return config
   },
   (error) => Promise.reject(error)
 )
 
+// Response Interceptor
 api.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -54,6 +65,7 @@ api.interceptors.response.use(
       handleForceLogout(message)
       return Promise.reject(error)
     }
+
     if (!error.config?.silent) {
       if (error.code === "ECONNABORTED") {
         alert("⏱️ การเชื่อมต่อหมดเวลา (Timeout) กรุณาลองใหม่อีกครั้ง")
