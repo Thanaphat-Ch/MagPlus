@@ -6,29 +6,24 @@ const db = require('./db');
 const socketIo = require('socket.io');
 const http = require('http');
 
-const { OAuth2Client } = require('google-auth-library');
-const CLIENT_ID = '751459675544-sklv91a38s83i2fuv56kalffdam1e59.apps.googleusercontent.com';
-const client = new OAuth2Client(CLIENT_ID);
-
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 //const sharp = require("sharp");
 const { error } = require('console');
 
-// const prefix = 'https://app.magnitudetms.com';
-const prefix = 'http://localhost:5000';
+const prefixUrl = process.env.URL_STORAGE || 'http://localhost:5000';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 require('dotenv').config();
-const JWT_SECRET = 'Th12345';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const dbPromise = db.promise();
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -624,7 +619,7 @@ app.post('/api/sendMessage', (req, res) => {
     res.json({message: 'ok-'})
 });
 
-// ✅ Provinces
+//
 app.get('/api/provinces',authenticateToken, (req, res) => {
   db.query('SELECT id, name_in_thai FROM provinces', (err, results) => {
     console.log(results)
@@ -742,51 +737,6 @@ app.get("/api/user/:userId", (req, res) => {
 
     res.json({ username: results[0].username });
   });
-});
-
-const allowedAdmins = ['autosorat@gmail.com',];
-
-app.post('/api/login-google', async (req, res) => {
-  const { idToken } = req.body;
-  if (!idToken) return res.status(400).json({ message: 'Missing idToken' });
-
-  try {
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-
-    if (!payload || !payload.email || !payload.sub) {
-      return res.status(400).json({ message: 'Invalid token payload' });
-    }
-
-    const email = payload.email;
-    const name = payload.name || '';
-    const googleId = payload.sub;
-
-    db.query('SELECT * FROM users WHERE username = ?', [email], (err, results) => {
-      if (err) return res.status(500).json({ message: 'DB error', error: err });
-
-      if (results.length === 0) {
-        const sqlInsert = 'INSERT INTO users (username, name) VALUES (?, ?)';
-        db.query(sqlInsert, [email, name], (err2, result) => {
-          if (err2) return res.status(500).json({ message: 'Insert user failed', error: err2 });
-
-          const token = jwt.sign({ id: result.insertId, username: email, role: 'user' }, JWT_SECRET, { expiresIn: '1h' });
-          res.json({ message: 'Login success (new user)', token, user: { id: result.insertId, username: email, name } });
-        });
-      } else {
-        const user = results[0];
-        const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-        res.json({ message: 'Login success', token, user });
-      }
-    });
-
-  } catch (error) {
-    console.error('Google login error:', error);
-    res.status(401).json({ message: 'Invalid Google ID token' });
-  }
 });
 
 // เข้างาน
@@ -950,34 +900,6 @@ app.get("/api/leave", (req, res) => {
   });
 });
 
-// app.put("/api/leave/:id/status", (req, res) => {
-//   const { id } = req.params;
-//   const { status } = req.body;
-
-//   if (!["pending", "approved", "rejected"].includes(status)) {
-//     return res.status(400).json({ error: "Invalid status" });
-//   }
-
-//   db.query("UPDATE leave_requests SET status = ? WHERE id = ?", [status, id], (err) => {
-//     if (err) return res.status(500).json({ error: err.message });
-
-//     db.query("SELECT * FROM leave_requests WHERE id = ?", [id], (err, results) => {
-//       if (err) return res.status(500).json({ error: err.message });
-//       if (results.length === 0) return res.status(404).json({ error: "Request not found" });
-
-//       const request = results[0];
-
-//       io.emit("newNotification", {
-//         id: Date.now(),
-//         title: `คำขอในการลาล่วงหน้า ${status === "approved" ? "อนุมัติ" : "ปฏิเสธ"}`,
-//         message: `${request.name} ${request.lastname} ถูก ${status === "approved" ? "อนุมัติ" : "ปฏิเสธ"}`,
-
-//         time: "ตอนนี้",
-//       });
-//       res.json(request);
-//     });
-//   });
-// });
 app.put("/api/leave/:id/status", (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -1296,7 +1218,7 @@ app.get('/api/truck/read', authenticateToken, (req, res) => {
   let sql = "SELECT * FROM t_truck";
   let params = [];
 
-  // ✅ ถ้ามีคำค้นหา ให้เพิ่มเงื่อนไข WHERE
+  // ถ้ามีคำค้นหา ให้เพิ่มเงื่อนไข WHERE
   if (search !== "") {
     sql += " WHERE T_ID LIKE ? OR T_No LIKE ? OR T_Lc LIKE ?";
     const keyword = `%${search}%`;
@@ -2402,7 +2324,7 @@ app.post('/api/upload/temp-image', tempUpload.single('image'), (req, res) => {
 
 
 function addPrefix(input, newprefix) {
-  const Prefix = newprefix || prefix;
+  const Prefix = newprefix || prefixUrl;
   if (!input) return typeof input === "string" ? "" : [];
 
   try {
@@ -2426,16 +2348,16 @@ function addPrefix(input, newprefix) {
 
 function stripPrefix(path) {
   if (!path) return null;
-  const regex = new RegExp("^" + prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const regex = new RegExp("^" + prefixUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   if (Array.isArray(path)) {   // ถ้า path เป็น array → map ทุก element
     return path.map(p => {
       if (typeof p !== 'string') return p; // ถ้าไม่ใช่ string คืนค่าเดิม
-      let newPath = p.startsWith(prefix) ? p.replace(regex, "") : p;
+      let newPath = p.startsWith(prefixUrl) ? p.replace(regex, "") : p;
       return newPath.replace(/^\/+/, "");
     });
   }
   if (typeof path === 'string') {  // ถ้า path เป็น string
-    let newPath = path.startsWith(prefix) ? path.replace(regex, "") : path;
+    let newPath = path.startsWith(prefixUrl) ? path.replace(regex, "") : path;
     return newPath.replace(/^\/+/, "");
   }
   return path;// ถ้าไม่ใช่ string หรือ array → คืนค่าเดิม
@@ -2444,8 +2366,8 @@ function stripPrefix(path) {
 function deleteFile(filePath) {
   if (!filePath) return false;
   try {
-    // const regex = new RegExp("^" + prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    // const newFilePath = filePath.startsWith(prefix) ? filePath.replace(regex, "") : filePath;
+    // const regex = new RegExp("^" + prefixUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    // const newFilePath = filePath.startsWith(prefixUrl) ? filePath.replace(regex, "") : filePath;
     // const fullPath = path.join(__dirname, newFilePath.replace(/^\/+/, ""));
     const fullPath = path.join(__dirname, stripPrefix(filePath));
     const uploadsRoot = path.join(__dirname, "uploads");
