@@ -48,8 +48,8 @@ useEffect(() => {
 
   const menuDashboard = [{ to: "/admin", label: "หน้าหลัก", icon: <FaTachometerAlt /> },]
   const menuItems = [
-    { to: "/adminChatDashboard", label: "แชท", icon: <FaComments /> },
-    // { to: "/service", label: "แจ้งซ่อม", icon: <FaFileInvoiceDollar /> },
+    // { to: "/adminChatDashboard", label: "แชท", icon: <FaComments /> },
+    { to: "/service", label: "แจ้งซ่อม", icon: <FaFileInvoiceDollar /> },
     // { to: "/notification", label: "แจ้งเตือน", icon: <IoIosNotifications /> },
   ]
   

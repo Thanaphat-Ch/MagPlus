@@ -55,15 +55,11 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex min-h-screen w-screen bg-gray-100">
-      {/* Sidebar */}
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-100">
       <div className={`shadow-lg md:block  ${isSidebarOpen ? 'fixed inset-y-0 left-0 z-30 w-64 transform translate-x-0 transition-transform duration-300 ease-in-out' : 'hidden'}`}>
         <Sidebar />
       </div>
-
-      {/* Content */}
-      <div className="flex flex-col flex-1 w-full">
-        {/* Header mobile */}
+      <div className="flex flex-col flex-1 min-w-0 w-full">
         <header className="md:hidden bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-20">
           <h1 className="text-xl font-bold text-gray-800">{getHeaderTitle()}</h1>
           <button onClick={toggleSidebar} className="text-gray-600 focus:outline-none">
@@ -72,9 +68,7 @@ export default function AdminLayout() {
             </svg>
           </button>
         </header>
-
-        {/* หน้าย่อยจะแสดงตรงนี้ */}
-        <main className="flex flex-1 bg-gray-100 overflow-x-hidden">
+        <main className="flex flex-1 bg-gray-100 overflow-y-auto overflow-x-hidden">
           <Outlet />
         </main>
       </div>

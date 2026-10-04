@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react"
 import LeaveRequestCard from "../components/LeaveRequestCard"
 import LeaveRequestDetailModal from "../components/LeaveRequestDetailModal"
-import api from "../api" // ✅ เปลี่ยนมาใช้ api กลางที่มี Token และ Interceptor
+import api from "../api"
 
 const FILTER_TEXTS = {
   all: "ทั้งหมด",
@@ -17,7 +17,6 @@ const ICONS = {
   total: "📊",
 }
 
-// แยก StatCard ไว้นอกคอมโพเนนต์หลัก
 function StatCard({ title, value, type, loading }) {
   const colors = {
     pending: "border-amber-500",

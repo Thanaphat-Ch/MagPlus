@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react"
-import Sidebar from "../components/Sidebar"
 import ServiceCard from "../components/ServiceCard"
 import ServiceDetailModal from "../components/ServiceDetailModal"
 import { io } from "socket.io-client"
@@ -87,10 +86,6 @@ export default function Service() {
   }, [serviceRequests, filter])
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      {/* เมนูด้านข้าง Sidebar */}
-      <Sidebar />
-
       <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -164,6 +159,5 @@ export default function Service() {
           </div>
         )}
       </main>
-    </div>
   )
 }

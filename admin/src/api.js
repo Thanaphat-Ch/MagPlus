@@ -1,6 +1,5 @@
 import axios from "axios"
 
-// ใช้ Environment Variable ก่อน ถ้าไม่มีค่อยถอยมา localhost
 const API_BASE_URL = import.meta.env.VITE_API_URL 
   ? `${import.meta.env.VITE_API_URL}/api` 
   : "http://localhost:5000/api"
@@ -10,56 +9,62 @@ const api = axios.create({
   timeout: 10000, // 10 วินาที
 })
 
-// ป้องกันการแจ้งเตือน 401 ซ้ำซ้อนเวลาหลาย API พังพร้อมกัน
+// ป้องกันการเด้งซ้ำซ้อน
 let isRedirecting = false
 
-// Request Interceptor: แนบ Bearer Token
+// ฟังก์ชันกลางสำหรับเคลียร์ค่าและเตะกลับหน้า Login
+const handleForceLogout = (message) => {
+  if (isRedirecting) return
+  isRedirecting = true
+
+  localStorage.removeItem("token")
+  if (message) alert(message)
+
+  if (window.location.pathname !== "/") {
+    window.location.href = "/"
+  } else {
+    isRedirecting = false
+  }
+}
+
+// Request Interceptor: บังคับว่าต้องมี Token ก่อนยิงทุกครั้ง
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token")
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    if (!token) {
+      handleForceLogout("ไม่พบสิทธิ์การใช้งาน กรุณาเข้าสู่ระบบก่อน")
+      return Promise.reject(new axios.Cancel("No token found. Request aborted."))
     }
+    config.headers.Authorization = `Bearer ${token}`
     return config
   },
   (error) => Promise.reject(error)
 )
 
-// Response Interceptor: จัดการ Response และ Errors
 api.interceptors.response.use(
   (res) => res,
   (error) => {
-    const status = error.response?.status
-
-    // 1. กรณี Token หมดอายุ หรือไม่มีสิทธิ์ยืนยันตัวตน (401)
-    if (status === 401) {
-      if (!isRedirecting) {
-        isRedirecting = true
-        localStorage.removeItem("token")
-        
-        const message = error.response?.data?.message || "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่"
-        alert(message)
-
-        // ป้องกัน redirect วนลูปถ้าอยู่ที่หน้าแรกอยู่แล้ว
-        if (window.location.pathname !== "/") {
-          window.location.href = "/"
-        }
-      }
+    if (axios.isCancel(error)) {
       return Promise.reject(error)
     }
 
-    // 2. ถ้าไม่ได้ตั้งค่า config.silent = true ให้แจ้งเตือน Error ทั่วไป
+    const status = error.response?.status
+    if (status === 401) {
+      const message = error.response?.data?.message || "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่"
+      handleForceLogout(message)
+      return Promise.reject(error)
+    }
     if (!error.config?.silent) {
       if (error.code === "ECONNABORTED") {
         alert("⏱️ การเชื่อมต่อหมดเวลา (Timeout) กรุณาลองใหม่อีกครั้ง")
       } else if (error.code === "ERR_NETWORK" || !error.response) {
         alert("❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ตหรือสถานะเซิร์ฟเวอร์")
       } else if (status === 403) {
-        alert(error.response.data?.message || "⛔ คุณไม่มีสิทธิ์เข้าถึงส่วนนี้")
+        alert(error.response?.data?.message || "⛔ คุณไม่มีสิทธิ์เข้าถึงส่วนนี้")
       } else {
         const errorMsg =
-          error.response.data?.message ||
-          error.response.data?.error ||
+          error.response?.data?.message ||
+          error.response?.data?.error ||
           "⚠️ เกิดข้อผิดพลาดจากเซิร์ฟเวอร์"
         alert(errorMsg)
       }

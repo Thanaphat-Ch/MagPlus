@@ -168,7 +168,6 @@ const AdminDashboard = () => {
     <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
       <h1 className="hidden md:block text-3xl font-bold text-gray-800">Admin Dashboard</h1>
 
-      {/* ✅ FIXED: Changed variable references to use the summaryData state object */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <StatCard
           title="จำนวนรถทั้งหมด"

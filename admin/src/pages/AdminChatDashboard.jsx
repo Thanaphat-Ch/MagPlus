@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 
 import ChatWindow from "../components/ChatWindow";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function AdminChatDashboard() {
   const [adminId, setAdminId] = useState(null);

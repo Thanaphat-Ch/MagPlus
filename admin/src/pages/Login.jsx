@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { jwtDecode } from "jwt-decode"
-import api from "../api"
+import axios from "axios"
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
 const Login = () => {
   const [username, setUsername] = useState("")
@@ -18,20 +18,39 @@ const Login = () => {
     setError("")
 
     try {
-      const response = await api.post("/login", { username, password })
+      console.log("Attempting login with API_BASE_URL:", API_BASE_URL)
+      const response = await axios.post(`${API_BASE_URL}/api/login`, { username, password })
       const data = response.data
-      if (!data.token) { throw new Error("Token missing in server response")}
 
+      if (!data.token) {
+        throw new Error("TOKEN_MISSING")
+      }
       localStorage.setItem("token", data.token)
       navigate("/admin")
     } catch (error) {
-      // กรณี interceptor alert ไปแล้ว และไม่อยากให้ขึ้น alert ซ้ำสองรอบ
-      // สามารถตั้ง state error ในหน้า UI ได้ตามปกติ
-      const msg = error.response?.data?.message || error.message || "Login failed"
+      let msg = "เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่"
+      if (error.response) {
+        const status = error.response.status
+        const serverMessage = error.response.data?.message || error.response.data?.error
+        if (serverMessage) {
+          msg = serverMessage // ถ้าหลังบ้านส่งข้อความเฉพาะมา ให้ใช้ข้อความนั้น
+        } else if (status === 400 || status === 401) {
+          msg = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"
+        } else if (status === 404) {
+          msg = "ไม่พบเส้นทางเชื่อมต่อ กรุณาตรวจสอบ URL ของเซิร์ฟเวอร์"
+        } else if (status >= 500) {
+          msg = "เซิร์ฟเวอร์ขัดข้อง กรุณาลองใหม่อีกครั้งในภายหลัง"
+        }
+      } else if (error.code === "ECONNABORTED") {
+        msg = "การเชื่อมต่อหมดเวลา กรุณาลองใหม่อีกครั้ง"
+      } else if (error.code === "ERR_NETWORK" || !error.request) {
+        msg = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ต"
+      } else if (error.message === "TOKEN_MISSING") {
+        msg = "เข้าสู่ระบบสำเร็จแต่ไม่พบ Token ยืนยันตัวตน"
+      }
       setError(msg)
     }
   }
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">

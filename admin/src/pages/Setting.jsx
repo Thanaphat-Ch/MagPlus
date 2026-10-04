@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Swal from "sweetalert2"
-import Sidebar from "../components/Sidebar"
 import api from "../api" 
 
 const Setting = () => {
@@ -165,9 +164,7 @@ const Setting = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <Sidebar />
-
+    <div className="flex flex-1 min-h-screen bg-slate-50">
       <main className="flex-1 p-6 md:p-10 space-y-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">การตั้งค่าบัญชี</h1>
@@ -175,7 +172,7 @@ const Setting = () => {
         </div>
 
         {user ? (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 sm:p-8 max-w-3xl space-y-6">
+          <div className="bg-white mx-auto rounded-2xl border border-slate-100 shadow-sm p-6 sm:p-8 max-w-3xl space-y-6">
             <div className="border-b border-slate-100 pb-4">
               <h2 className="text-lg font-semibold text-slate-800">ข้อมูลผู้ใช้งานปัจจุบัน</h2>
             </div>
