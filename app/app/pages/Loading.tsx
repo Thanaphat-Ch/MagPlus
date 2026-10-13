@@ -6,7 +6,8 @@ import { ActivityIndicator, Alert, Dimensions, Image, Modal, Platform, SafeAreaV
 import SignatureScreen from "react-native-signature-canvas";
 import SignatureCanvas from "react-signature-canvas";
 import NavFooter from "../components/NavFooter";
-import { API_URL } from "@/lib/config";
+import api, { getApiErrorMessage } from "@/lib/api";
+import * as FileSystem from "expo-file-system/legacy";
 
 const screenWidth = Dimensions.get("window").width;
 const thumbnailSize = (screenWidth - 32 - 16) / 3;
@@ -56,6 +57,7 @@ export default function Loading() {
   const [recipientSignature, setRecipientSignature] = useState<string | null>(null);
   const [completionTime, setCompletionTime] = useState<Date | null>(null);
   const [deliveryMileage, setDeliveryMileage] = useState<string>("");
+  const [recipientName, setRecipientName] = useState("");
   const [unloadingModalVisible, setUnloadingModalVisible] = useState<boolean>(false);
   const [receiptModalVisible, setReceiptModalVisible] = useState<boolean>(false);
   const [signatureModalVisible, setSignatureModalVisible] = useState<boolean>(false);
@@ -144,8 +146,12 @@ export default function Loading() {
   };
 
   const handleCompleteDelivery = async (): Promise<void> => {
-    if (!recipientSignature || unloadingImages.length === 0 || receiptImages.length === 0) {
-      Alert.alert("ข้อมูลไม่ครบ", "กรุณาเพิ่มรูปภาพและลายเซ็นผู้รับสินค้าให้ครบถ้วน");
+    if (!recipientSignature || !deliveryMileage.trim() || !recipientName.trim() || unloadingImages.length === 0 || receiptImages.length === 0) {
+      Alert.alert("ข้อมูลไม่ครบ", "กรุณากรอกชื่อผู้รับและเลขไมล์ พร้อมเพิ่มรูปภาพและลายเซ็นให้ครบถ้วน");
+      return;
+    }
+    if (!jobId || !driverId) {
+      Alert.alert("ข้อมูลไม่ถูกต้อง", "ไม่พบรหัสงานหรือรหัสผู้ขับ");
       return;
     }
 
@@ -153,10 +159,37 @@ export default function Loading() {
     const now = new Date();
     const formData = new FormData();
 
-    formData.append('recipientSignature', recipientSignature);
+    formData.append('recipientName', recipientName.trim());
+    formData.append('deliveryMileage', deliveryMileage.trim());
     formData.append('completionTime', now.toISOString());
-    formData.append('jobId', jobId as string);
-    formData.append('driverId', driverId as string);
+    formData.append('jobId', jobId);
+    formData.append('driverId', driverId);
+
+    let signatureFileUri: string | null = null;
+    try {
+      if (Platform.OS === "web") {
+        const signatureBlob = await (await fetch(recipientSignature)).blob();
+        formData.append("recipientSignature", signatureBlob, "recipient-signature.png");
+      } else {
+        const cacheDirectory = FileSystem.cacheDirectory;
+        if (!cacheDirectory) throw new Error("ไม่พบพื้นที่จัดเก็บไฟล์ชั่วคราว");
+        const base64Signature = recipientSignature.replace(/^data:image\/\w+;base64,/, "");
+        signatureFileUri = `${cacheDirectory}recipient-signature-${Date.now()}.png`;
+        await FileSystem.writeAsStringAsync(signatureFileUri, base64Signature, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        formData.append("recipientSignature", {
+          uri: signatureFileUri,
+          name: "recipient-signature.png",
+          type: "image/png",
+        } as any);
+      }
+    } catch (error) {
+      console.error("Could not prepare recipient signature upload:", error);
+      Alert.alert("เกิดข้อผิดพลาด", getApiErrorMessage(error, "ไม่สามารถเตรียมไฟล์ลายเซ็นได้"));
+      setIsLoading(false);
+      return;
+    }
 
     if (Platform.OS === 'web') {
       const fetchAsBlob = (uri: string) => fetch(uri).then((res) => res.blob());
@@ -202,22 +235,20 @@ export default function Loading() {
     }
 
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        body: formData,
-       });
-      const result = await response.json();
-
-        if (response.ok) {
-          router.push('../pages/historyPage');
-        } else {
-          throw new Error(result.error || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-        }
+      await api.post("/api/delivery/complete", formData);
+      router.push('../pages/historyPage');
 
     } catch (error) {
       console.error("Failed to complete delivery:", error);
-      Alert.alert("เกิดข้อผิดพลาด", (error as Error).message);
+      Alert.alert("เกิดข้อผิดพลาด", getApiErrorMessage(error, "ไม่สามารถบันทึกการส่งสินค้าได้"));
     } finally {
+      if (signatureFileUri) {
+        try {
+          await FileSystem.deleteAsync(signatureFileUri, { idempotent: true });
+        } catch (cleanupError) {
+          console.warn("Could not remove temporary signature file:", cleanupError);
+        }
+      }
       setIsLoading(false);
     }
   };
@@ -278,6 +309,16 @@ export default function Loading() {
               </TouchableOpacity>
             </SectionCard>
 
+            <SectionCard icon="person-outline" title="ผู้รับสินค้า">
+              <TextInput
+                className="border border-gray-300 rounded-lg p-3 text-base bg-white"
+                placeholder="กรอกชื่อผู้รับสินค้า"
+                value={recipientName}
+                onChangeText={setRecipientName}
+                maxLength={100}
+              />
+            </SectionCard>
+
             <SectionCard icon="speedometer" title="เลขไมล์ (กม.)">
               <TextInput
                 className="border border-gray-300 rounded-lg p-3 text-base bg-white"
@@ -304,7 +345,7 @@ export default function Loading() {
           ) : (
             <ActionButton
               title={isLoading ? "กำลังบันทึก..." : "ยืนยันการลงสินค้า"}
-              disabled={!recipientSignature || unloadingImages.length === 0 || receiptImages.length === 0}
+              disabled={!recipientSignature || !recipientName.trim() || !deliveryMileage.trim() || unloadingImages.length === 0 || receiptImages.length === 0}
               onPress={handleCompleteDelivery}
               isLoading={isLoading}
             />

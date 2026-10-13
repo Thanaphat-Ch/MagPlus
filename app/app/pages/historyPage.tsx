@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { AxiosResponse } from 'axios';
+import api from "@/lib/api";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Linking, Platform, SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
@@ -152,11 +153,9 @@ export default function HistoryScreen() {
         // fetchCarLocation(); 
 
         const statusParam = STATUS_MAP[activeTab];
-        const url = `http://localhost:5000/api/jobs/driver/${currentDriverId}?status=${statusParam}`;
- 
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('ไม่สามารถดึงข้อมูลงานได้');
-        const data = await res.json();
+        const { data } = await api.get(`/api/jobs/driver/${currentDriverId}`, {
+          params: { status: statusParam },
+        });
         setShipments(data);
       } catch (err) {
         if (Platform.OS !== 'web') Alert.alert("เกิดข้อผิดพลาด", (err as Error).message);

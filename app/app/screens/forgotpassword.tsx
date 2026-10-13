@@ -1,11 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import AlertModal from "../components/AlertModal";
 import { h4, page, pageBody } from "../styles/tw";
-import { API_URL } from "@/lib/config";
+import api from "@/lib/api";
 
 export default function DriverRegisterScreen() {
   const [idCard, setIdCard] = useState("");
@@ -47,7 +46,7 @@ export default function DriverRegisterScreen() {
     await AsyncStorage.setItem("U_ID", phone);
     console.log({ username, idCard, phone, licensePlate });
         try {
-          const response = await axios.post(`${API_URL}/api/forgot`, {
+          const response = await api.post("/api/forgot", {
             username,
             idCard,
             phone,

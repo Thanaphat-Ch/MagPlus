@@ -582,17 +582,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Modal, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { io } from "socket.io-client";
 import NavFooter from "../components/NavFooter";
+import api, { getApiErrorMessage } from "@/lib/api";
+import { API_URL } from "@/lib/config";
 
 
-const SERVER =
-  Platform.OS === "android"
-    ? "https://localhost:5000"
-    : "http://localhost:5000";
-
-const socket = io(SERVER, { transports: ["websocket"] });
+const socket = io(API_URL, { transports: ["websocket"] });
 
 const JobCard = ({ job, onPress }: { job: any; onPress: () => void }) => (
   <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
@@ -790,6 +787,7 @@ export default function Main() {
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [completedJobsCount, setCompletedJobsCount] = useState<number>(0);
+  const [jobsError, setJobsError] = useState("");
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [jobToReject, setJobToReject] = useState<any>(null);
   const [selectedReason, setSelectedReason] = useState<any>(null);
@@ -831,11 +829,12 @@ export default function Main() {
     try {
       const driverId = await AsyncStorage.getItem("U_ID");
       if (!driverId) return;
-      const res = await fetch(`${SERVER}/api/jobs/driver/${driverId}?status=0`);
-      const data = await res.json();
+      const { data } = await api.get(`/api/jobs/driver/${driverId}`, { params: { status: 0 } });
       setJobs(Array.isArray(data) ? data : []);
+      setJobsError("");
     } catch (err) {
       console.error("API Error (Pending Jobs):", err);
+      setJobsError(getApiErrorMessage(err, "ไม่สามารถโหลดรายการงานได้"));
     }
   };
 
@@ -843,8 +842,7 @@ export default function Main() {
     try {
       const driverId = await AsyncStorage.getItem("U_ID");
       if (!driverId) return;
-      const res = await fetch(`${SERVER}/api/jobs/driver/${driverId}?status=3`);
-      const data = await res.json();
+      const { data } = await api.get(`/api/jobs/driver/${driverId}`, { params: { status: 3 } });
       setCompletedJobsCount(Array.isArray(data) ? data.length : 0); 
     } catch (err) {
       console.error("API Error (Completed Jobs):", err);
@@ -858,12 +856,11 @@ export default function Main() {
       const driverName = (await AsyncStorage.getItem("U_NAME")) || undefined;
       if (!driverId) throw new Error("ไม่พบรหัสผู้ขับในเครื่อง");
 
-      const res = await fetch(`${SERVER}/api/order_shipment/skey/${job.S_Key}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "in_progress", driverId, driverName, }),
+      await api.put(`/api/order_shipment/skey/${job.S_Key}/status`, {
+        status: "in_progress",
+        driverId,
+        driverName,
       });
-      if (!res.ok) throw new Error(await res.text());
 
       socket.emit("jobAccepted", { sKey: job.S_Key, driverId });
       setJobs((prev) => prev.filter((j) => j.S_Key !== job.S_Key));
@@ -871,6 +868,7 @@ export default function Main() {
       router.push("/pages/historyPage");
     } catch (err) {
       console.error("❌ Accept error:", err);
+      Alert.alert("รับงานไม่สำเร็จ", getApiErrorMessage(err, "ไม่สามารถรับงานนี้ได้"));
     }
   };
 
@@ -932,17 +930,13 @@ export default function Main() {
     try {
       const finalReason = selectedReason === "อื่น ๆ" ? otherReason : selectedReason;
       const formData = await buildRejectFormData(finalReason, rejectImage);
-      const res = await fetch(`${SERVER}/api/shipment/reject/${jobToReject.S_Key}`, { method: "POST", body: formData });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `HTTP ${res.status}`);
-      }
+      await api.post(`/api/shipment/reject/${jobToReject.S_Key}`, formData);
       socket.emit("jobRejected", { sKey: jobToReject.S_Key });
       setJobs((prev) => prev.filter((j) => j.S_Key !== jobToReject.S_Key));
       closeRejectModal();
     } catch (err) {
       console.error("❌ Reject error:", err);
-      setError("เกิดข้อผิดพลาดในการส่งข้อมูล");
+      setError(getApiErrorMessage(err, "เกิดข้อผิดพลาดในการส่งข้อมูล"));
     } finally {
       setIsLoading(false);
     }
@@ -989,7 +983,14 @@ export default function Main() {
         </View>
         <View className="p-4">
           <Text className="text-xl font-bold text-slate-800 mb-4">งานใหม่สำหรับคุณ ✨</Text>
-          {jobs.length === 0 ? (
+          {jobsError ? (
+            <View className="rounded-xl border border-red-200 bg-red-50 p-4">
+              <Text className="text-red-700">{jobsError}</Text>
+              <TouchableOpacity onPress={fetchJobs} className="mt-3 self-start">
+                <Text className="font-bold text-red-800">ลองอีกครั้ง</Text>
+              </TouchableOpacity>
+            </View>
+          ) : jobs.length === 0 ? (
             <View className="items-center justify-center mt-16">
               <Ionicons name="briefcase-outline" size={60} color="#94a3b8" />
               <Text className="text-slate-600 text-lg font-semibold mt-4">ยังไม่มีงานใหม่เข้ามา</Text>

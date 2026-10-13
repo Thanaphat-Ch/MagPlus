@@ -35,7 +35,7 @@ export default {
     ],
     experiments: { typedRoutes: true },
     extra: {
-      apiUrl: process.env.API_URL || "http://localhost:5000",
+      apiUrl: process.env.EXPO_PUBLIC_API_URL || process.env.API_URL,
       eas: {
         projectId: "c55bea43-2687-45a7-b501-4b5ceea9d3a3"
       }

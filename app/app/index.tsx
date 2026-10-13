@@ -1,12 +1,13 @@
 
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from 'axios';
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Image, Modal, Text, TouchableOpacity, View } from "react-native";
 import AlertModal from "./components/AlertModal";
-import { connSocket } from "./services/socket";
+import { connSocket, disconnectSocket } from "./services/socket";
+import api from "@/lib/api";
+import { API_URL } from "@/lib/config";
 
 interface Notifications {
     id: number;
@@ -24,7 +25,6 @@ export default function LoginPinScreen() {
   const [alertMessage, setAlertMessage] = useState('แจ้งเตือน');
   const [alertMessage2, setAlertMessage2] = useState('');
   const socketRef = useRef<any>(null);
-  const API_URL = process.env.API_URL || 'http://localhost:5000';
 
 
   useEffect(() => {
@@ -42,6 +42,8 @@ export default function LoginPinScreen() {
     });
 
     return () => {
+      socketRef.current?.off('sendMessage_admin');
+      disconnectSocket();
     };
   }, []);
 
@@ -63,7 +65,7 @@ export default function LoginPinScreen() {
   const handleSubmit = async (password: string) => {
     const username = await AsyncStorage.getItem('saved_username');
     try {
-      const response = await axios.post(`${API_URL}/api/login`, {
+      const response = await api.post("/api/login", {
         username,
         password,
       });
@@ -71,7 +73,11 @@ export default function LoginPinScreen() {
       await AsyncStorage.setItem("token", response.data.token);
       await AsyncStorage.setItem("userId", response.data.user.id.toString());
       await AsyncStorage.setItem("user",JSON.stringify(response.data.user));
-      await AsyncStorage.setItem("U_ID", response.data.user.U_ID.toString());
+      if (response.data.user.U_ID != null) {
+        await AsyncStorage.setItem("U_ID", String(response.data.user.U_ID));
+      } else {
+        await AsyncStorage.removeItem("U_ID");
+      }
       
       console.log (response) 
       router.replace('./pages/Main');

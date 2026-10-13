@@ -2,13 +2,13 @@ import { ImagePreviewModal } from '@/app/components/ImagePreviewModal';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, Image, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DropDownPicker, { ItemType } from 'react-native-dropdown-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import api from '@/lib/api';
 
 interface LeaveCounts {
   pending: number;
@@ -123,13 +123,7 @@ export default function AttendanceLeave() {
 
   const fetchPendingCount = async () => {
     try {
-        const token = await AsyncStorage.getItem("token");
-        const res = await axios.get(
-       `https://app.magnitudetms.com/api/leave-requests`,
-        {
-            headers: { Authorization: `Bearer ${token}` },
-        }
-        );
+        const res = await api.get("/api/leave-requests");
 
         // setCounts(res.data.counts);
         setCounts(res.data.counts);
@@ -164,9 +158,7 @@ export default function AttendanceLeave() {
             }
         }
 
-        const { data } = await axios.post("https://app.magnitudetms.com/api/leave", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-        });
+        const { data } = await api.post("/api/leave", formData);
 
         Alert.alert("สำเร็จ", data.message);
         setReason("");
@@ -352,4 +344,3 @@ export default function AttendanceLeave() {
       </SafeAreaView>
     );
 }
-

@@ -1,7 +1,6 @@
 // Profile.tsx
 import { Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -21,7 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import NavFooter from "../../components/NavFooter";
 import { ImageCropPreview } from "./components/ImageCropPreview";
 import LeaveFormModal from "./components/LeaveFormModal";
-import { API_URL } from "@/lib/config";
+import api from "@/lib/api";
 
 interface Profile {
   username?: string;
@@ -56,9 +55,7 @@ export default function Profile() {
     if (!token) return router.replace("/");
   
     try {
-      const res = await axios.get(`${API_URL}/api/user/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/api/user/profile");
       setProfile(res.data);
     } catch (err) {
       console.error(err);
@@ -111,7 +108,6 @@ export default function Profile() {
   const handleImageUpload = async (imageUri: string) => {
     setUploading(true);
     try {
-      const token = await AsyncStorage.getItem("token");
       const userId = await AsyncStorage.getItem("U_ID"); // ✅ ดึงจาก AsyncStorage
       if (!userId) {
         Alert.alert("กรุณาล็อกอินใหม่");
@@ -132,36 +128,20 @@ export default function Profile() {
       }     
       formData.append("userId", userId);
 
-      const res = await axios.post(
-        `${API_URL}/api/upload?Up_type=driver`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const res = await api.post("/api/upload?Up_type=driver", formData);
       console.log("✅ Upload success:", res.data);
 
       const profile = res.data.files?.[0]?.url;
       console.log("✅ Upload success:", profile);
-      if (!profile) return console.log('!uploadedPath')
+      if (!profile) throw new Error("เซิร์ฟเวอร์ไม่ได้ส่ง URL รูปโปรไฟล์กลับมา");
 
-      await axios.put(`${API_URL}/api/user/update`, { profile },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await api.put("/api/user/update", { profile });
       await new Promise((r) => setTimeout(r, 500));
       fetchProfile();
       Alert.alert("เปลี่ยนสำเร็จ");
     } catch (err: any) {
       console.error("❌ error:", err.response?.data || err.message);
-      Alert.alert("เปลี่ยนโปรไฟล์ไม่สำเร็จ", err.response?.data.message || '');
+      Alert.alert("เปลี่ยนโปรไฟล์ไม่สำเร็จ", err.response?.data?.message || err.message || "ไม่สามารถอัปเดตรูปโปรไฟล์ได้");
     } finally {
       setUploading(false);
       setModalVisible(false);
@@ -174,16 +154,17 @@ export default function Profile() {
     try {
       const token = await AsyncStorage.getItem("token");
       if (token) {
-        await axios.post(
-          `${API_URL}/api/logout`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.post("/api/logout", {});
         await AsyncStorage.removeItem("token");
       }
     } catch (err: any) {
       console.error("Logout failed:", err.response?.data || err.message);
     } finally {
+      try {
+        await AsyncStorage.multiRemove(["token", "userId", "U_ID", "user"]);
+      } catch (storageError) {
+        console.error("Could not clear local login data:", storageError);
+      }
       router.replace("/");
     }
   };
@@ -220,7 +201,7 @@ export default function Profile() {
     setCheckInTime(now);
 
     try {
-        const { data } = await axios.post(`${API_URL}/api/attendance/checkin`, {
+        const { data } = await api.post("/api/attendance/checkin", {
             user_id: userId,
         });
 
@@ -237,7 +218,7 @@ export default function Profile() {
     setCheckOutTime(now);
 
     try {
-        const { data } = await axios.post(`${API_URL}/api/attendance/checkout`, {
+        const { data } = await api.post("/api/attendance/checkout", {
             user_id: userId,
         });
 

@@ -7,7 +7,7 @@ import { ActivityIndicator, Alert, Dimensions, Image, Modal, Platform, SafeAreaV
 import SignatureScreen from "react-native-signature-canvas";
 import SignatureCanvas from "react-signature-canvas";
 import NavFooter from "../components/NavFooter";
-import { API_URL } from "@/lib/config";
+import api, { getApiErrorMessage } from "@/lib/api";
 
 const screenWidth = Dimensions.get("window").width;
 const thumbnailSize = (screenWidth - 32 - 16) / 3;
@@ -156,8 +156,8 @@ export default function Pickup() {
   };
 
   const handleStartDelivery = async (): Promise<void> => {
-    if (!signature || !signerName || productImages.length === 0 || workOrderImages.length === 0) {
-      Alert.alert("ข้อมูลไม่ครบ", "กรุณากรอกชื่อผู้รับผิดชอบ, เพิ่มรูปภาพ และลายเซ็นให้ครบถ้วน");
+    if (!signature || !signerName.trim() || !mileage.trim() || productImages.length === 0 || workOrderImages.length === 0) {
+      Alert.alert("ข้อมูลไม่ครบ", "กรุณากรอกชื่อผู้รับผิดชอบและเลขไมล์ พร้อมเพิ่มรูปภาพและลายเซ็นให้ครบถ้วน");
       return;
     }
     if (!jobId || !driverId) {
@@ -175,6 +175,7 @@ export default function Pickup() {
     formData.append("jobId", jobId as string);
     formData.append("driverId", driverId as string);
     formData.append("status", "in_progress");
+    formData.append("mileage", mileage.trim());
 
     if (Platform.OS === 'web') {
         const fetchAsBlob = (uri: string) => fetch(uri).then((res) => res.blob());
@@ -214,24 +215,15 @@ export default function Pickup() {
     }
     
     try {
-        const response = await fetch(`${API_URL}/api/delivery/start-delivery`, {
-            method: "POST",
-            body: formData,
-        });
-        const result = await response.json();
-
-        if (response.ok) {
-            setDepartureTime(now);
-            Alert.alert(
-                "เริ่มการจัดส่งสำเร็จ",
-                `บันทึกเวลาเริ่มงาน: ${now.toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.`
-            );
-        } else {
-            throw new Error(result.error || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-        }
+        await api.post("/api/delivery/start-delivery", formData);
+        setDepartureTime(now);
+        Alert.alert(
+            "เริ่มการจัดส่งสำเร็จ",
+            `บันทึกเวลาเริ่มงาน: ${now.toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.`
+        );
     } catch (error) {
         console.error("Failed to start delivery:", error);
-        Alert.alert("เกิดข้อผิดพลาด", (error as Error).message);
+        Alert.alert("เกิดข้อผิดพลาด", getApiErrorMessage(error, "ไม่สามารถบันทึกการเริ่มจัดส่งได้"));
     } finally {
         setLoading(false);
     }
