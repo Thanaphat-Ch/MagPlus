@@ -1,10 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import AlertModal from "../components/AlertModal";
-import { API_URL } from "@/lib/config";
+import api from "@/lib/api";
 
 export default function ResetPasswordScreen() {
   
@@ -69,12 +68,7 @@ export default function ResetPasswordScreen() {
     try {
       const username = await AsyncStorage.getItem('saved_username');
 
-      try {
-        await axios.put(`${API_URL}/api/set-pin`, {username, password});
-        console.log("newset แล้ว")
-      } catch (err) {
-        console.error('❌ Update failed:', err);
-      }
+      await api.put("/api/set-pin", { username, password });
       setAlertMessage('สำเร็จ')
       setAlertMessage2('บันทึกสำเร็จ ตั้งค่ารหัสผ่านเรียบร้อย');
       setAlertVisible(true);

@@ -1,13 +1,12 @@
 import { ConfirmModal } from "@/app/components/AlertModal";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import RowInput from "./components/RowInput";
-import { API_URL } from "@/lib/config";
+import api from "@/lib/api";
 
 interface DriverData {
   D_ID: string
@@ -55,9 +54,7 @@ export default function ProfileScreen() {
     if (!token) return router.replace("/")
 
     try {
-      const response = await axios.get(`${API_URL}/api/driver/read`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const response = await api.get("/api/driver/read")
       const driver = response.data[0] || defaultDriverData;
 
       setFormData({
@@ -79,19 +76,13 @@ export default function ProfileScreen() {
 
   const handleSave = async () => {
     try {
-      setIsViewOnly(true)
       const token = await AsyncStorage.getItem("token") // ถ้ามีการใช้ Bearer Token
       if (!token) return router.replace("/")
 
-      const response = await axios.put(`${API_URL}/api/driver/update`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
+      await api.put("/api/driver/update", formData)
 
+      setIsViewOnly(true)
       Alert.alert("บันทึกสำเร็จ", "ข้อมูลได้รับการบันทึกแล้ว")
-      console.log("อัปเดตข้อมูลสำเร็จ:", response.data)
     } catch (error) {
       console.error("อัปเดตข้อมูลล้มเหลว:", error)
       Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้")

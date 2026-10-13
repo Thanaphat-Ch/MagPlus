@@ -14,33 +14,40 @@ type Notification = {
   time: string;
 };
 
-export default function notifications() {
+export default function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   
   useEffect(() => {
     const loadNotifications = async () => {
-      const stored = await AsyncStorage.getItem("notifications");
-      if (stored) setNotifications(JSON.parse(stored));
+      try {
+        const stored = await AsyncStorage.getItem("notifications");
+        if (stored) setNotifications(JSON.parse(stored));
+      } catch (error) {
+        console.error("Could not load notifications:", error);
+      }
     };
-    loadNotifications();
+    void loadNotifications();
   }, []);
 
   useEffect(() => {
-  const socket = io(`${API_URL}`);
-
-  socket.on("newNotification", async (data: Notification) => {
+    const socket = io(API_URL);
+    const handleNotification = (data: Notification) => {
       setNotifications((prev) => {
         const updated = [data, ...prev];
-        AsyncStorage.setItem("notifications", JSON.stringify(updated)); 
+        void AsyncStorage.setItem("notifications", JSON.stringify(updated)).catch((error) => {
+          console.error("Could not persist notification:", error);
+        });
         return updated;
       });
-    });
+    };
 
-  // cleanup function
-  return () => {
-    socket.disconnect();
-  };
-}, []);
+    socket.on("newNotification", handleNotification);
+
+    return () => {
+      socket.off("newNotification", handleNotification);
+      socket.disconnect();
+    };
+  }, []);
 
   return (
     <View className="flex-1 bg-white">

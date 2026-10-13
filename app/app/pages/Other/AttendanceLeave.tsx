@@ -1,7 +1,6 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -9,7 +8,7 @@ import { Alert, FlatList, Image, Platform, ScrollView, Text, TextInput, Touchabl
 import DropDownPicker, { ItemType } from 'react-native-dropdown-picker';
 import { ImagePreviewModal } from '../../components/ImagePreviewModal';
 import NavFooter from '../../components/NavFooter';
-import { API_URL } from '@/lib/config';
+import api from '@/lib/api';
 
 interface CrossPlatformDatePickerProps {
     label: string;
@@ -120,13 +119,7 @@ export default function AttendanceLeave() {
 
   const fetchPendingCount = async () => {
     try {
-        const token = await AsyncStorage.getItem("token");
-        const response = await axios.get(
-        `${API_URL}/api/sum-leave-requests`,
-        {
-            headers: { Authorization: `Bearer ${token}` },
-        }
-        );
+        const response = await api.get("/api/sum-leave-requests");
 
         // ✅ response.data เป็นตัวเลขโดยตรง เช่น 5
         setPendingCount(response.data);
@@ -141,7 +134,7 @@ export default function AttendanceLeave() {
     setCheckInTime(now);
 
     try {
-        const { data } = await axios.post(`${API_URL}/api/attendance/checkin`, {
+        const { data } = await api.post("/api/attendance/checkin", {
             user_id: userId,
         });
 
@@ -158,7 +151,7 @@ export default function AttendanceLeave() {
     setCheckOutTime(now);
 
     try {
-        const { data } = await axios.post(`${API_URL}/api/attendance/checkout`, {
+        const { data } = await api.post("/api/attendance/checkout", {
             user_id: userId,
         });
 
@@ -194,9 +187,7 @@ export default function AttendanceLeave() {
             }
         }
 
-        const { data } = await axios.post(`${API_URL}/api/leave`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-        });
+        const { data } = await api.post("/api/leave", formData);
 
         Alert.alert("สำเร็จ", data.message);
         setReason("");
@@ -380,4 +371,3 @@ export default function AttendanceLeave() {
         </View>
     );
 }
-

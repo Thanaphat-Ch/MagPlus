@@ -10,11 +10,25 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Configure the Express API address in `.env`:
+
+   ```env
+   EXPO_PUBLIC_API_URL=http://localhost:5000
+   ```
+
+   Use `http://10.0.2.2:5000` for an Android emulator. For a physical device,
+   use the computer's LAN IP (for example, `http://192.168.1.10:5000`) and make
+   sure the phone and computer can reach each other. This value is included in
+   the app bundle, so do not put credentials in it.
+
+3. Start the app
 
    ```bash
    npx expo start
    ```
+
+Express requests go through `lib/api.ts`; update `lib/config.ts` or the Expo
+environment configuration to switch API hosts. Socket.IO uses the same base URL.
 
 In the output, you'll find options to open the app in a
 

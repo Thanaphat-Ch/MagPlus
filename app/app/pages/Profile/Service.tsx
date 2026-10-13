@@ -1,5 +1,5 @@
 import NavFooter from "@/app/components/NavFooter";
-import { API_URL } from "@/lib/config";
+import api from "@/lib/api";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker, {
@@ -179,29 +179,11 @@ export default function ServicePage() {
       }
 
       // 6. ส่ง Request ไปยัง API
-      const response = await fetch(`${API_URL}/api/service2`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const text = await response.text();
-      console.log("📥 Raw response:", text);
-
-      let result;
-      try {
-        result = JSON.parse(text);
-      } catch {
-        result = { error: "ไม่สามารถแปลง JSON ได้", raw: text };
-      }
+      const { data: result } = await api.post("/api/service2", formData);
 
       setIsLoading(false);
 
-
-      // 7. จัดการผลลัพธ์
-      if (response.ok) {
+      if (result) {
         Alert.alert("ส่งสำเร็จ", "ส่งเรื่องแจ้งซ่อมเรียบร้อยแล้ว", [
           {
             text: "ตกลง",

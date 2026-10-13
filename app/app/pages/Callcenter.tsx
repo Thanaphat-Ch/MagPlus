@@ -1,11 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { io } from "socket.io-client";
 import Navfooter from "../components/NavFooter";
 import { API_URL } from "@/lib/config";
+import api from "@/lib/api";
 
 const socket = io(API_URL, {
   reconnection: true,
@@ -45,7 +45,7 @@ export default function Callcenter() {
         const decoded = jwtDecode<JWTPayload>(token);
         const currentUserId = decoded.id;
         setUserId(currentUserId);
-        const response = await axios.get(`${API_URL}/api/messages/group/general_2`);
+        const response = await api.get("/api/messages/group/general");
         setChatMessages(response.data);
       } catch (err) {
         console.error("❌ เกิดข้อผิดพลาดในการโหลดข้อมูล:", err);

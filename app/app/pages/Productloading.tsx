@@ -13,6 +13,7 @@ import {
 import SignatureScreen from "react-native-signature-canvas";
 import SignatureCanvas from "react-signature-canvas";
 import NavFooter from "../components/NavFooter";
+import api from "@/lib/api";
 
 export default function Productloading() {
   const router = useRouter();
@@ -280,7 +281,7 @@ export default function Productloading() {
         const match = /\.(\w+)$/.exec(filename || "");
         const type = match ? `image/${match[1]}` : `image`;
 
-        formData.append("images", {
+        formData.append("files", {
           uri,
           name: filename,
           type,
@@ -289,12 +290,7 @@ export default function Productloading() {
 
       formData.append("signature", signature);
 
-      const response = await fetch("http://192.168.1.74:5000/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const result = await response.json();
+      const { data: result } = await api.post("/api/upload?Up_type=driver", formData);
       console.log("📦 อัปโหลดเสร็จแล้ว:", result);
       Alert.alert("สำเร็จ", "ส่งข้อมูลเรียบร้อยแล้ว");
 

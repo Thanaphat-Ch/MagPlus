@@ -1,7 +1,6 @@
 
-import { API_URL } from "@/lib/config";
+import api from "@/lib/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from 'axios';
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, Keyboard, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -36,14 +35,11 @@ export default function SetPasswordScreen() {
 
   const handleSave = async () => {
     Keyboard.dismiss();
-    console.log({API_URL})
     try {
-      await AsyncStorage.setItem("saved_username", username);
-      await AsyncStorage.setItem("saved_pin", password);
-
       try {
-        await axios.put(`${API_URL}/api/set-pin`, {username, password});
-        console.log("set แล้ว")
+        await api.put("/api/set-pin", { username, password });
+        await AsyncStorage.setItem("saved_username", username);
+        await AsyncStorage.setItem("saved_pin", password);
         Alert.alert("บันทึกสำเร็จ", "ตั้งค่ารหัสผ่านเรียบร้อย");
         router.replace("/");
       } catch (err: any) {

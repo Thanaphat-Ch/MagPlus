@@ -1,8 +1,7 @@
 import { ImagePreviewModal } from "@/app/components/ImagePreviewModal";
 import { formatThaiDate } from "@/app/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+import api from "@/lib/api";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 
@@ -47,11 +46,7 @@ export default function LeaveHistory({ navigation }: any) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
-        // Update URL to a placeholder since the original one is a local IP 
-        const res = await axios.get("https://app.magnitudetms.com/api/leave-requests", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get("/api/leave-requests");
         setRequests(res.data.requests);
         setCounts(res.data.counts);
       } catch (error) {
