@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Swal from "sweetalert2"
-import api from "../api" 
+import api from "../api"
 
 const Setting = () => {
   const navigate = useNavigate()
@@ -219,7 +219,6 @@ const Setting = () => {
             <div className="text-slate-400 font-medium animate-pulse">กำลังโหลดข้อมูลโปรไฟล์...</div>
           </div>
         )}
-
 
         {isModalOpen && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex justify-center items-center p-4" onClick={closeManageUsersModal}>

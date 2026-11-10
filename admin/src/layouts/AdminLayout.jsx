@@ -21,7 +21,7 @@ export default function AdminLayout() {
 }, [isSidebarOpen]);
 
   
-  const location = useLocation(); // รู้ว่าอยู่ path ไหน
+  const location = useLocation(); 
 
   useEffect(() => {
     // ทุกครั้งที่เปลี่ยนหน้า ให้ sidebar mobile พับ
