@@ -15,6 +15,7 @@ import AdminChatDashboard from "./pages/AdminChatDashboard"
 import Notification from "./pages/Notification"
 import AddAsset from "./pages/Fleet-manage/AddAsset"
 import TranferAsset from "./pages/Fleet-manage/TranferAsset"
+import ProtectedRoute from "./ProtectedRoute";
 
 
 function App() {
@@ -23,20 +24,22 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
 
-        <Route element={<AdminLayout />}>
-          <Route path="/admin" element={<AdminDashboard/>} />
-          <Route path="/drivers" element={<Driver/>} />
-          <Route path="/settings" element={<SettingsPage/>} />
-          <Route path="/booking" element={<Booking/>} />
-          <Route path="/shipment" element={<Shipment/>} />
-          <Route path="/trucks" element={<Truck/>} />
-          <Route path="/attendance/time-record" element={<TimeRecord/>} />
-          <Route path="/attendance/leave-request" element={<LeaveRequest/>} />
-          <Route path="/service" element={<Service/>} />
-          <Route path="/adminChatDashboard" element={<AdminChatDashboard/>} />
-          <Route path="/notification" element={<Notification />} />
-          <Route path="/addAsset" element={<AddAsset />} />
-          <Route path="/tranferAsset" element={<TranferAsset />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<AdminDashboard/>} />
+            <Route path="/drivers" element={<Driver/>} />
+            <Route path="/settings" element={<SettingsPage/>} />
+            <Route path="/booking" element={<Booking/>} />
+            <Route path="/shipment" element={<Shipment/>} />
+            <Route path="/trucks" element={<Truck/>} />
+            <Route path="/attendance/time-record" element={<TimeRecord/>} />
+            <Route path="/attendance/leave-request" element={<LeaveRequest/>} />
+            <Route path="/service" element={<Service/>} />
+            <Route path="/adminChatDashboard" element={<AdminChatDashboard/>} />
+            <Route path="/notification" element={<Notification />} />
+            <Route path="/addAsset" element={<AddAsset />} />
+            <Route path="/tranferAsset" element={<TranferAsset />} />
+          </Route>
         </Route>
       </Routes>
     </Router>
